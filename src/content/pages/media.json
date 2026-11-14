@@ -1,0 +1,6 @@
+{
+ "path": "/media/",
+ "title": "MEDIA",
+ "section": "media",
+ "html": "<div class=\"cols cols-2\"><div><p><a class=\"btn\" href=\"/media/press/\">Press</a></p><p><a class=\"btn\" href=\"/media/video/\">Video</a></p></div><div><p><a class=\"btn\" href=\"/media/fotoen/\">Fotoen</a></p><p><a class=\"btn\" href=\"/media/linken/\">Linken</a></p></div></div><p><a class=\"btn\" href=\"/media/handball-tv/\">Handball-TV</a></p>"
+}

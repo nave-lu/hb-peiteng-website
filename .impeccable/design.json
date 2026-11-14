@@ -1,0 +1,22 @@
+{
+  "source": "DESIGN.md",
+  "world": "Das Trikot",
+  "seed": "d88565d3",
+  "shadows": {
+    "cloth": "0 1px 1px rgb(0 0 0 / 0.08), 0 6px 18px -6px rgb(0 0 0 / 0.28)",
+    "jersey": "drop-shadow(0 5px 6px rgb(0 0 0 / 0.32))",
+    "news-patch": "0 0 0 4px #0e0e0c, 0 0 0 5.5px rgb(14 14 12 / 0.35), 0 10px 22px -10px rgb(0 0 0 / 0.5)"
+  },
+  "textures": {
+    "mesh": "radial-gradient dots 1px every 5px, offset grid, ink 11% / 7.5%",
+    "svg-mesh-pattern": "#hbp-mesh in Base.astro",
+    "double-stitch": "2 × repeating-linear-gradient(90deg, var(--st) 0 7px, transparent 7px 12px), 1.5px, 5px apart"
+  },
+  "motion": {
+    "ease": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "load": "flock: .back-nr scale(1.06) translateY(-8px) → none, 1s; rise 14px on hero copy",
+    "signature": "jersey flip: .shirt-inner rotateY(180deg), 0.8s, backface hidden",
+    "reduced-motion": "all animations and transitions off"
+  },
+  "focus": "3px solid ink (yellow on ink surfaces), offset 3px"
+}

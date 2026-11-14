@@ -1,0 +1,121 @@
+{
+  "title": "Welche Welt für HB Péiteng?",
+  "question": "Der Wurf hat „Das Trikot“ zugeteilt. Behalten, eine Alternative nehmen oder neu würfeln.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Das Trikot",
+      "kicker": "THE ROLL",
+      "lineage": "Gelb-schwarzes HBP-Matchtrikot mit Rückennummern und Sponsorenaufdrucken",
+      "thesis": "Die Seite ist das Clubtrikot: Teams tragen Nummern, Partner sitzen als Aufdruck auf dem Stoff.",
+      "palette": ["#F6D200", "#0E0E0C", "#FFFFFF", "#2B2B27"],
+      "materials": ["Trikotstoff mit Mesh-Struktur", "Flock-Rückennummern", "Sponsor-Patches"],
+      "viewport": "Vollflächiges Gelb wie ein Trikotrücken: riesige schwarze Flocknummer, darüber „PÉITENG“ als Rückenname, daneben direkt die Trainingszeiten der Jugend und „Schnupperen kommen“ als Knopf.",
+      "risk": "Wird kitschig, wenn das Trikot nur Kostüm ist statt Ordnungssystem (Nummern = Teams, Patches = Partner).",
+      "raised": [
+        {"from": "challenger-matchbook", "raise": "Jede Equipe und jeder Beitrag ist ein eigenes, vollständiges Stück Stoff: ein Patch, eine Komposition."},
+        {"from": "challenger-shader", "raise": "Mut zum Maßstab: eine riesige Nummer gegen winzige gesperrte Beschriftungen, nie Mittelgröße."},
+        {"from": "challenger-nightmarket", "raise": "Auf dem Handy bleibt der Weg ins Training immer im Daumenbereich, wie das nächste Schild auf dem Markt."}
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Den Hallebuedem",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Hallenboden im Bim Diederich: 6-m-Kreis, gestrichelte 9-m-Linie, Mittellinie",
+      "thesis": "Die Spielfeldlinien sind das Raster der Seite; man scrollt vom Tor über die Mittellinie zum anderen Tor.",
+      "palette": ["#C9824A", "#F6D200", "#111111", "#F4F1EA"],
+      "materials": ["lackierter Hallenboden", "Linienfarbe", "Tornetz"],
+      "viewport": "Draufsicht auf den Torraum: der 6-m-Bogen rahmt den Titel, auf der 9-m-Linie stehen Training, Matcher, Mitmachen.",
+      "risk": "Sportplatz-Linien sind ein häufiger Griff in dieser Kategorie; vertrauter als das Trikot."
+    },
+    {
+      "id": "challenger-splitflap",
+      "label": "D'Anzeigetafel",
+      "verdict": "competitive",
+      "lineage": "Fallblatt-Abfahrtstafel, übertragen auf den Matchkalender",
+      "thesis": "Was diese Woche passiert, klappert als Tafel: Equipe, Géigner, Hal, Auerzäit.",
+      "palette": ["#111111", "#FFFFFF", "#F6D200", "#B3261E"],
+      "materials": ["matte Klappblätter", "gebürsteter Stahlrahmen"],
+      "viewport": "Die Tafel „Dëse Weekend“ füllt den ersten Bildschirm, Zeilen pro Match, gelbe Lampe beim Heimspiel.",
+      "case": "Sehr klar für Matcher und Training; schwächer bei Identität, weil Bahnhof statt Halle, und Spielplan ist kein Admin-Inhalt.",
+      "risk": "Ohne aktuell gepflegte Matchdaten steht die Tafel leer."
+    },
+    {
+      "id": "challenger-matchbook",
+      "label": "Streichholzschachteln",
+      "verdict": "declined",
+      "lineage": "Schublade voller Club-Streichholzbriefchen",
+      "thesis": "Erinnerungen als kleine Sammelobjekte.",
+      "palette": ["#5A1A1A", "#1E3B2B", "#0E0E0C", "#C9A23A"],
+      "materials": ["Goldfolie", "Reibfläche"],
+      "viewport": "Ein Fächer aus Briefchen pro Saison.",
+      "case": "Eltern und Fans erkennen sich darin nicht; Training und Matcher gehen unter.",
+      "kept": "Ein Objekt, eine Komposition: jedes Team als vollständiger Patch.",
+      "risk": "Nostalgie statt Verein."
+    },
+    {
+      "id": "challenger-nightmarket",
+      "label": "Nachtmarkt-Schilder",
+      "verdict": "declined",
+      "lineage": "Laternen und Schilder eines Nachtmarkts",
+      "thesis": "Wegweiser durch Bezirke.",
+      "palette": ["#E9A23B", "#101010", "#1F4E8C", "#B3261E"],
+      "materials": ["Laternenlicht", "Pappschilder"],
+      "viewport": "Ein Fluss aus Schildern Richtung Training.",
+      "case": "Fremde Welt für einen Handballclub; verwässert Gelb-Schwarz.",
+      "kept": "Der nächste Weg (ins Training) bleibt auf dem Handy immer dominant.",
+      "risk": "Wirkt wie ein Festival."
+    },
+    {
+      "id": "challenger-shader",
+      "label": "Shader-Portal",
+      "verdict": "declined",
+      "lineage": "WebGL-Studio-Portal",
+      "thesis": "Lebendige Pixel, dünne Schrift.",
+      "palette": ["#0A0A14", "#F6D200"],
+      "materials": ["Fragment-Shader", "Filmkorn"],
+      "viewport": "Ein Wort über bewegter Farbe.",
+      "case": "Eltern suchen Trainingszeiten, kein Erlebnis; schlecht für Ehrenamtliche zu pflegen.",
+      "kept": "Extremer Maßstabskontrast: ein riesiges Element gegen winzige Labels.",
+      "risk": "Langsam auf alten Handys."
+    },
+    {
+      "id": "challenger-neon",
+      "label": "Neonschrift",
+      "verdict": "declined",
+      "lineage": "handgebogene Neonröhre",
+      "thesis": "Ein Wort als leuchtende Linie.",
+      "palette": ["#0B0B10", "#2E5BFF", "#D2452F"],
+      "materials": ["Glasröhre", "Elektroden"],
+      "viewport": "„HBP“ in Neon im Dunkeln.",
+      "case": "Bar statt Sporthalle; keine Verbindung zu Training oder Teams.",
+      "kept": "Eine durchgehende Linie, die die Seite zusammenhält.",
+      "risk": "Effekt ohne Inhalt."
+    },
+    {
+      "id": "challenger-kiln",
+      "label": "Glasur-Regal",
+      "verdict": "declined",
+      "lineage": "Brennofen-Regal mit laufender Glasur",
+      "thesis": "Material, das läuft und stoppt.",
+      "palette": ["#F2F0EA", "#1F3FA0", "#0F2A6B"],
+      "materials": ["Schamotte", "Kobaltglasur"],
+      "viewport": "Becher in einer Reihe.",
+      "case": "Keinerlei Bezug zu Verein, Sport oder Gemeinde.",
+      "kept": "Zustände aus dem Material ablesbar machen (aktuell, vorbei, Archiv).",
+      "risk": "Kunsthandwerk statt Club."
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "canon": true,
+  "canonCard": {
+    "label": "Der Vereins-Standard",
+    "thesis": "Was Sportvereine üblicherweise haben, sauber umgesetzt.",
+    "palette": ["#0E0E0C", "#F6D200", "#FFFFFF"],
+    "materials": ["Teamfoto", "klares Raster", "Sponsorenleiste"],
+    "viewport": "Großes Teamfoto mit Titel, darunter News-Karten, Termine und eine Partnerleiste.",
+    "risk": "Sieht aus wie jeder andere Club."
+  },
+  "steer": true
+}

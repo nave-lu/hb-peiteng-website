@@ -1,0 +1,62 @@
+---
+/* Ein Einstieg für alle Seiten und Sprachen.
+ * LB: alte Adressen der Jimdo-Seite bleiben gleich (z. B. /hären-i/kader/).
+ * FR/DE: dieselben Adressen mit /fr bzw. /de davor. */
+import Home from '../views/Home.astro';
+import Page from '../views/Page.astro';
+import { LANGS, t, href, type Lang } from '../i18n/ui';
+import { pages, teams, type Page as P } from '../lib/content';
+import site from '../data/site.json';
+
+export function getStaticPaths() {
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
+  const extraPages = (lang: Lang): { page: P; extra?: string }[] => {
+    const week = days
+      .map((d) => {
+        const rows = teams
+          .filter((tm) => !tm.hidden)
+          .flatMap((tm) => tm.training.filter((r) => r.day === d).map((r) => ({ tm, r })))
+          .sort((a, b) => a.r.time.localeCompare(b.r.time));
+        if (!rows.length) return '';
+        return `<section><h2>${t(lang, `day.${d}`)}</h2><ul>${rows
+          .map(({ tm, r }) => `<li><a href="${href(lang, tm.page)}">${tm.name[lang]}</a><br><span class="t">${r.time}</span><span class="h">${r.hall}</span></li>`)
+          .join('')}</ul></section>`;
+      })
+      .join('');
+    const mail = (m: string) => `<a href="mailto:${m}">${m}</a>`;
+    return [
+      { page: { path: '/trainingszäiten/', title: t(lang, 'label.all'), section: 'equippen', html: '' }, extra: `<div data-render="week" class="week">${week}</div><p style="margin-top:2em"><a class="btn" href="${href(lang, '/club/gëff-handballspiller-inn/')}">${t(lang, 'cta.training')}</a></p>` },
+      {
+        page: { path: '/kontakt/', title: t(lang, 'contact.title'), section: 'club', html: '' },
+        extra: `<p>${t(lang, 'contact.lead')}</p><div class="contact-grid"><div><h2>${t(lang, 'contact.secretary')}</h2><p>${mail(site.emails.club)}</p></div><div><h2>${t(lang, 'contact.president')}</h2><p>${mail(site.emails.president)}</p></div><div><h2>${t(lang, 'contact.wisi')}</h2><p>${mail(site.emails.wisiCup)}</p></div></div><h2>${t(lang, 'footer.address')}</h2><p>${site.fullName}<br>${site.address.join('<br>')}</p><h2>${t(lang, 'footer.halls')}</h2><ul>${site.halls.map((h) => `<li><strong>${h.name}</strong>${h.street || h.city ? `, ${[h.street, h.city].filter(Boolean).join(', ')}` : ''} · <a href="${h.map}" target="_blank" rel="noopener">Kaart</a></li>`).join('')}</ul>`,
+      },
+      {
+        page: { path: '/impressum/', title: t(lang, 'footer.legal'), section: 'club', html: '' },
+        extra: `<h2>${site.fullName}</h2><p>${site.address.join('<br>')}</p><p>${mail(site.emails.club)}</p><p><strong>President:</strong> Jean-Claude MULLER</p>`,
+      },
+      {
+        page: { path: '/dateschutz/', title: t(lang, 'footer.privacy'), section: 'club', html: '' },
+        extra: `<p><strong>[FEHLT]</strong> Dateschutzerklärung vum Club, ze kréien a ze préiwen.</p><p>Dës Säit setzt keng Cookien a keng Statistik-Tools an. Videoe vu Vimeo ginn eréischt gelueden, wann d'Säit mat engem Video opgemaach gëtt.</p>`,
+      },
+      { page: { path: '/noriichten-1/archiv/', title: t(lang, 'news.archive'), section: 'noriichten', html: '' } },
+      { page: { path: '/noriichten-1/neu/', title: t(lang, 'news.title'), section: 'noriichten', html: '' }, extra: '<div data-render="news-draft"></div>' },
+    ];
+  };
+
+  return LANGS.flatMap((lang) => {
+    const prefix = lang === 'lb' ? '' : lang;
+    const slug = (path: string) => [prefix, ...path.split('/').filter(Boolean)].filter(Boolean).join('/') || undefined;
+    const imported = pages
+      .filter((p) => p.path !== '/' && p.path !== '/kontakt/' && p.path !== '/noriichten-1/archiv/')
+      .map((page) => ({ params: { slug: slug(page.path) }, props: { lang, page } }));
+    return [
+      { params: { slug: slug('/') }, props: { lang, home: true } },
+      ...imported,
+      ...extraPages(lang).map(({ page, extra }) => ({ params: { slug: slug(page.path) }, props: { lang, page, extra } })),
+    ];
+  });
+}
+
+const { lang, page, home, extra } = Astro.props as { lang: Lang; page?: P; home?: boolean; extra?: string };
+---
+{home ? <Home lang={lang} /> : <Page lang={lang} page={page!} extra={extra} />}

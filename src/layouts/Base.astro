@@ -1,0 +1,131 @@
+---
+import '../styles/global.css';
+import site from '../data/site.json';
+import { LANGS, LANG_NAME, HTML_LANG, t, href, type Lang } from '../i18n/ui';
+import { NAV, sectionOf } from '../lib/content';
+
+interface Props { lang: Lang; title: string; path: string; description?: string; editKey?: string }
+const { lang, title, path, description } = Astro.props;
+const current = sectionOf(path);
+const fullTitle = path === '/' ? `${site.name} · ${site.fullName}` : `${title} · ${site.name}`;
+const desc = description ?? t(lang, 'hero.title');
+const joinPath = '/club/gëff-handballspiller-inn/';
+---
+<!doctype html>
+<html lang={HTML_LANG[lang]}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <meta name="theme-color" content="#0e0e0c" />
+    <link rel="icon" href="/brand/hbp-logo.jpg" />
+    <link rel="preload" href="/fonts/big-shoulders-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    {LANGS.map((l) => <link rel="alternate" hreflang={HTML_LANG[l]} href={href(l, path)} />)}
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:image" content="/fotos/i19c747d3d81ebcd6.jpg" />
+  </head>
+  <body data-lang={lang} data-path={path}>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <pattern id="hbp-mesh" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="1.25" cy="1.25" r="0.85" fill="rgb(14 14 12 / 0.16)"/><circle cx="3.75" cy="3.75" r="0.85" fill="rgb(14 14 12 / 0.1)"/></pattern>
+      </defs>
+    </svg>
+    <a class="skip" href="#inhalt">{t(lang, 'nav.skip')}</a>
+    <header class="collar">
+      <div class="wrap collar-in">
+        <a class="collar-logo" href={href(lang, '/')} aria-label={`${site.name} – Start`}>
+          <img src="/brand/hbp-logo.jpg" alt="" width="46" height="46" />
+          <span>HB Péiteng</span>
+        </a>
+        <nav class="collar-nav" aria-label="Haaptmenü">
+          {NAV.map((n) => <a href={href(lang, n.path)} aria-current={current?.key === n.key ? 'page' : undefined}>{t(lang, n.key)}</a>)}
+          <a href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined}>{t(lang, 'nav.contact')}</a>
+        </nav>
+        <div class="lang" aria-label="Sprooch">
+          {LANGS.map((l) => <a href={href(l, path)} hreflang={HTML_LANG[l]} lang={HTML_LANG[l]} aria-current={l === lang ? 'true' : undefined}>{LANG_NAME[l]}</a>)}
+        </div>
+        <a class="collar-cta" href={href(lang, joinPath)}>{t(lang, 'cta.training')}</a>
+        <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu">{t(lang, 'nav.menu')}</button>
+      </div>
+    </header>
+    <div class="menu" id="menu">
+      <ul>
+        {NAV.map((n) => <li><a href={href(lang, n.path)} aria-current={current?.key === n.key ? 'page' : undefined}>{t(lang, n.key)}</a></li>)}
+        <li><a href={href(lang, '/kontakt/')}>{t(lang, 'nav.contact')}</a></li>
+      </ul>
+      <div class="lang">
+        {LANGS.map((l) => <a href={href(l, path)} hreflang={HTML_LANG[l]} aria-current={l === lang ? 'true' : undefined}>{LANG_NAME[l]}</a>)}
+      </div>
+    </div>
+
+    <main id="inhalt">
+      <slot />
+    </main>
+
+    <footer class="shorts">
+      <div class="wrap">
+        <div class="shorts-grid">
+          <div>
+            <div class="shorts-brand">
+              <img src="/brand/hbp-logo.jpg" alt="" width="64" height="64" loading="lazy" />
+              <strong>{site.fullName.replace(' a.s.b.l.', '')}</strong>
+            </div>
+            <h2>{t(lang, 'footer.address')}</h2>
+            <p>{site.fullName}<br />{site.address.map((l) => <>{l}<br /></>)}</p>
+          </div>
+          <div>
+            <h2>{t(lang, 'nav.contact')}</h2>
+            <ul>
+              <li><a href={`mailto:${site.emails.club}`}>{site.emails.club}</a></li>
+              <li><a href={`mailto:${site.emails.president}`}>{site.emails.president}</a></li>
+              <li><a href={`mailto:${site.emails.wisiCup}`}>{site.emails.wisiCup}</a></li>
+            </ul>
+          </div>
+          <div>
+            <h2>{t(lang, 'footer.halls')}</h2>
+            <ul>
+              {site.halls.map((h) => <li>{h.page ? <a href={href(lang, h.page)}>{h.name}</a> : h.name}<br /><span>{[h.street, h.city].filter(Boolean).join(', ')}</span></li>)}
+            </ul>
+          </div>
+          <div>
+            <h2>{t(lang, 'footer.follow')}</h2>
+            <ul>
+              <li><a href={site.links.flhKlassement} target="_blank" rel="noopener">{t(lang, 'weekend.table')}</a></li>
+              <li><a href={site.links.livestream} target="_blank" rel="noopener">{t(lang, 'weekend.live')}</a></li>
+              <li><a href={href(lang, '/partner/')}>{t(lang, 'partner.all')}</a></li>
+              <li><a href={href(lang, '/shop/')}>Shop</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="shorts-base">
+          <span>© {new Date().getFullYear()} {site.fullName}</span>
+          <nav aria-label="Rechtliches">
+            <a href={href(lang, '/impressum/')}>{t(lang, 'footer.legal')}</a>
+            <a href={href(lang, '/dateschutz/')}>{t(lang, 'footer.privacy')}</a>
+            <a href="#login" data-login>{t(lang, 'footer.login')}</a>
+          </nav>
+        </div>
+      </div>
+    </footer>
+
+    <nav class="thumb" aria-label={t(lang, 'cta.trainingShort')}>
+      <a class="is-main" href={href(lang, joinPath)}>{t(lang, 'cta.training')}</a>
+      <a class="is-alt" href={href(lang, '/hären-i/')}>{t(lang, 'nav.teams')}</a>
+    </nav>
+
+    <dialog class="lightbox" aria-label="Foto">
+      <button class="lb-close" type="button" aria-label={t(lang, 'gallery.close')}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+      <button class="lb-prev" type="button" aria-label={t(lang, 'gallery.prev')}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4L6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button class="lb-next" type="button" aria-label={t(lang, 'gallery.next')}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </dialog>
+
+    <script>
+      import '../scripts/site';
+    </script>
+    <script>
+      import '../edit/boot';
+    </script>
+  </body>
+</html>

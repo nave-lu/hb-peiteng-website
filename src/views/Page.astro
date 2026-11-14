@@ -1,0 +1,72 @@
+---
+import Base from '../layouts/Base.astro';
+import { t, href, type Lang } from '../i18n/ui';
+import { teams, news, sectionOf, sectionTree, type Page } from '../lib/content';
+import { newsList, shirtSvg } from '../lib/render';
+
+interface Props { lang: Lang; page: Page; extra?: string }
+const { lang, page, extra } = Astro.props;
+const sec = sectionOf(page.path);
+const tree = sectionTree(page.path);
+const team = teams.find((x) => x.page === page.path);
+
+// Equipe-Seiten: Trainingszeiten kommen aus den Team-Daten (eine Quelle, im Admin pflegbar).
+let html = page.html;
+if (team) html = html.replace(/<table>(?:(?!<\/table>).)*?(Deeg|Wéini|Weini)(?:(?!<\/table>).)*?<\/table>/s, '');
+
+// Rubrik-Seiten der Neiegkeeten zeigen ihre Beiträge.
+const cat = page.path.match(/^\/noriichten-1\/([^/]+)\/$/)?.[1];
+const list = page.path === '/noriichten-1/' ? news.filter((n) => n.category !== 'archiv') : cat ? news.filter((n) => n.category === cat) : [];
+const parts = page.path.split('/').filter(Boolean);
+---
+<Base lang={lang} title={page.title} path={page.path}>
+  <div class="wrap">
+    <header class="page-head">
+      <nav class="crumb" aria-label="Breadcrumb">
+        <a href={href(lang, '/')}>HB Péiteng</a>
+        {sec && <><span aria-hidden="true">/</span><a href={href(lang, sec.path)}>{t(lang, sec.key)}</a></>}
+      </nav>
+      <h1 data-edit={`title:${page.path}`}>{page.title}</h1>
+      {team && <span class="page-nr" aria-hidden="true">{team.nr}</span>}
+    </header>
+    <div class="page-layout">
+      {tree.length > 1 ? (
+        <aside class="subnav">
+          <details open>
+            <summary>{sec ? t(lang, sec.key) : t(lang, 'page.section')}</summary>
+            <ul>
+              {tree.map((p) => (
+                <li class={`d${Math.min(p.depth, 3)}`}>
+                  <a href={href(lang, p.path)} aria-current={p.path === page.path ? 'page' : undefined}>{p.title}</a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </aside>
+      ) : <div />}
+      <article class="prose">
+        {lang !== 'lb' && page.html && <p class="lang-note">{t(lang, 'page.originalLang')}</p>}
+        {team && (
+          <div class="team-panel" data-render="team-panel" data-team-id={team.id}>
+            <div class="mini-shirt" aria-hidden="true">
+              <Fragment set:html={shirtSvg('mini-svg')} />
+              <span>{team.nr}</span>
+            </div>
+            <div>
+              <h2>{team.name[lang]}</h2>
+              {team.coach && <p><strong>{t(lang, 'teams.coach')}:</strong> {team.coach}</p>}
+              <ul class="shirt-times">
+                {team.training.map((r) => (
+                  <li><span class="day">{t(lang, `day.${r.day}` as any)}</span><span class="time">{r.time}</span><span class="hall">{r.hall}</span></li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+        {list.length > 0 && <div class="news-index" data-render="news-index" data-cat={cat ?? ''} set:html={newsList(list, lang)} />}
+        {extra && <div set:html={extra} />}
+        <div data-edit-html={`page:${page.path}`} set:html={html} />
+      </article>
+    </div>
+  </div>
+</Base>

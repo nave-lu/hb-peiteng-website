@@ -1,0 +1,20 @@
+{
+  "name": "HB Péiteng",
+  "fullName": "Handball Club vun der Gemeng Péiteng a.s.b.l.",
+  "founded": "1962-09-21",
+  "address": ["B.P. 62", "L-4701 Péiteng"],
+  "emails": { "president": "president@hbpeiteng.com", "club": "ca@hbpeiteng.com", "wisiCup": "wisi-cup@hbpeiteng.com" },
+  "phone": "",
+  "halls": [
+    { "id": "bim-diederich", "name": "Centre sportif „Bim Diederich“", "street": "rue Pierre Hamer", "city": "L-4737 Péiteng", "page": "/club/sportshalen/bim-diederich/", "map": "https://www.openstreetmap.org/search?query=rue%20Pierre%20Hamer%20P%C3%A9tange" },
+    { "id": "rodange", "name": "Sportshal Rodange", "street": "rue Jos. Moscardo", "city": "L-4840 Rodange", "page": "/club/sportshalen/hal-rodange-1/", "map": "https://www.openstreetmap.org/search?query=rue%20Jos%20Moscardo%20Rodange" },
+    { "id": "belval", "name": "Hal „Kannercampus“", "street": "", "city": "Belval", "page": "", "map": "https://www.openstreetmap.org/search?query=Kannercampus%20Belval" }
+  ],
+  "links": {
+    "flhKlassement": "https://www.flh.lu/championnat#/schedule",
+    "livestream": "https://www.flh-live.lu",
+    "refill": "https://www.re-fill.store/fr/collections/handball-peiteng",
+    "facebook": ""
+  },
+  "bank": ["BCEE: LU70 0019 6600 0580 8000", "CCRA: LU17 0090 0000 1643 1108"]
+}

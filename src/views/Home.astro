@@ -1,0 +1,123 @@
+---
+import Base from '../layouts/Base.astro';
+import site from '../data/site.json';
+import weekend from '../data/weekend.json';
+import { t, href, type Lang } from '../i18n/ui';
+import { teams, partners, news, pages } from '../lib/content';
+import { teamsGrid, youthLabel, partnerPatches, newsList } from '../lib/render';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const home = pages.find((p) => p.path === '/')!;
+// Das Banner (Logo mit Schriftzug) steht schon im Kragen; auf der Startseite nur die Aufrufe des Comités.
+const homeHtml = home.html.replace(/^<figure>.*?<\/figure>/, '');
+---
+<Base lang={lang} title="Start" path="/">
+  <div class="hero-wrap">
+    <section class="wrap back" aria-labelledby="hero-title">
+      <div class="back-print" aria-hidden="true">
+        <svg class="back-name" viewBox="0 0 720 170" role="presentation">
+          <path id="arc" d="M40 160 Q360 20 680 160" fill="none" />
+          <text text-anchor="middle"><textPath href="#arc" startOffset="50%" data-edit="ui:hero.back">{t(lang, 'hero.back')}</textPath></text>
+        </svg>
+        <div class="back-nr">62</div>
+        <p class="back-since" data-edit="ui:hero.since">{t(lang, 'hero.since')}</p>
+      </div>
+      <div class="back-copy">
+        <h1 id="hero-title" data-edit="ui:hero.title">{t(lang, 'hero.title')}</h1>
+        <p class="lead" data-edit="ui:hero.lead">{t(lang, 'hero.lead')}</p>
+        <div class="label">
+          <h2 data-edit="ui:label.title">{t(lang, 'label.title')}</h2>
+          <ul data-render="youth-label" set:html={youthLabel(teams, lang)} />
+          <p class="label-care" data-edit="ui:label.care">{t(lang, 'label.care')}</p>
+          <div class="label-foot">
+            <a class="tag-btn" href={href(lang, '/club/gëff-handballspiller-inn/')} data-edit="ui:cta.training">{t(lang, 'cta.training')}</a>
+            <a class="text-link" href={href(lang, '/trainingszäiten/')} data-edit="ui:label.all">{t(lang, 'label.all')}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="sleeve">
+      <div class="wrap sleeve-in">
+        <span class="sleeve-title" data-edit="ui:partner.main">{t(lang, 'partner.main')}</span>
+        <ul data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
+      </div>
+    </div>
+  </div>
+
+  <section class="section on-ink" id="equippen" aria-labelledby="teams-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="teams-title" data-edit="ui:teams.title">{t(lang, 'teams.title')}</h2>
+        <p data-edit="ui:teams.lead">{t(lang, 'teams.lead')}</p>
+      </div>
+      <div data-render="teams" set:html={teamsGrid(teams, lang)} />
+    </div>
+  </section>
+
+  <section class="section" aria-label={t(lang, 'news.title')}>
+    <div class="wrap board">
+      <div class="sheet weekend">
+        <h2 data-edit="ui:weekend.title">{t(lang, 'weekend.title')}</h2>
+        <div data-edit-html="weekend" set:html={weekend.html} />
+        <div class="sheet-links">
+          <a href={site.links.flhKlassement} target="_blank" rel="noopener" class="text-link">{t(lang, 'weekend.table')}</a>
+          <a href={site.links.livestream} target="_blank" rel="noopener" class="text-link">{t(lang, 'weekend.live')}</a>
+        </div>
+      </div>
+      <div class="news-col">
+        <h2 data-edit="ui:news.current">{t(lang, 'news.current')}</h2>
+        <div class="prose" data-edit-html="page:/" set:html={homeHtml} />
+      </div>
+    </div>
+    <div class="wrap news-row">
+      <div class="section-head">
+        <h2 data-edit="ui:news.title">{t(lang, 'news.title')}</h2>
+        <a class="text-link" href={href(lang, '/noriichten-1/')}>{t(lang, 'news.all')}</a>
+      </div>
+      <div class="news" data-render="news" set:html={newsList(news, lang, 4)} />
+    </div>
+  </section>
+
+  <section class="section on-ink" aria-labelledby="club-title">
+    <div class="wrap">
+      <div class="club">
+        <div class="club-photo">
+          <img src="/fotos/id1895526a9a16867.jpg" alt="HB Péiteng Equippen" loading="lazy" data-img="home-club" />
+          <span class="club-year" aria-hidden="true">1962</span>
+        </div>
+        <div class="club-copy">
+          <h2 id="club-title" data-edit="ui:club.title">{t(lang, 'club.title')}</h2>
+          <p data-edit="ui:club.text">{t(lang, 'club.text')}</p>
+          <p class="help" data-edit="ui:club.help">{t(lang, 'club.help')}</p>
+          <div class="club-links">
+            <a class="tag-btn is-yellow" href={href(lang, '/club/')} data-edit="ui:club.more">{t(lang, 'club.more')}</a>
+            <a href={href(lang, '/club/organigramme/')}>Organigramme</a>
+            <a href={href(lang, '/club/abo/')}>Abo</a>
+            <a href={href(lang, '/club/aschreiwung/')}>Aschreiwung</a>
+          </div>
+        </div>
+      </div>
+      <div class="wisi">
+        <h3 data-edit="ui:wisi.title">{t(lang, 'wisi.title')}</h3>
+        <p data-edit="ui:wisi.text">{t(lang, 'wisi.text')}</p>
+        <a class="tag-btn is-yellow" href={href(lang, '/wisi-cup/')}>{t(lang, 'wisi.title')}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="partner-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="partner-title" data-edit="ui:partner.title">{t(lang, 'partner.title')}</h2>
+        <p data-edit="ui:partner.lead">{t(lang, 'partner.lead')}</p>
+      </div>
+      <ul class="patches is-main" data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
+      <ul class="patches" data-render="partners-rest" set:html={partnerPatches(partners, 'partner')} />
+      <div class="partner-foot">
+        <a class="tag-btn" href={`mailto:${site.emails.president}`} data-edit="ui:partner.become">{t(lang, 'partner.become')}</a>
+        <a class="text-link" href={href(lang, '/partner/')}>{t(lang, 'partner.all')}</a>
+      </div>
+    </div>
+  </section>
+</Base>
