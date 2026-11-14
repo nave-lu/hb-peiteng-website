@@ -77,14 +77,14 @@ components:
 
 **Creative North Star: "Das Trikot"**
 
-Die Seite ist das Matchtrikot des Clubs: „giel Tricoten, schwaarz Shorten“, wie es auf der Club-Seite steht. Das Gelb ist der Stoff und deckt große Flächen (Committed). Schwarz kommt als Flocknummer, Kragen, Naht und als Hose (Fußzeile) dazu. Weiß gibt es nur dort, wo gelesen wird: auf eingenähten Etiketten und Leseflächen.
+Die Seite ist das Matchtrikot des Clubs: „giel Tricoten, schwaarz Shorten“, wie es auf der Club-Seite steht. Das Gelb ist der Stoff und deckt große Flächen (Committed). Schwarz kommt als Flocknummer, Kragen, Naht und als Hose (Fußzeile) dazu. Weiße Kästen gibt es nicht; alles steht direkt auf Gelb oder Tinte.
 
 Die Ordnung kommt aus dem Trikot selbst, Schmuck kommt nicht dazu. Jede Equipe trägt eine Rückennummer (U9 → 9, Hären I → 1, Dammen → D). Partner sind auf den Stoff gedruckt. Nachrichten sind aufgenähte Patches. Der Maßstab ist bewusst extrem: eine riesige „62“ (Gründungsjahr 1962) steht gegen winzige gesperrte Beschriftungen.
 
 **Key Characteristics:**
 - Vollflächiges Clubgelb mit sichtbarer Mesh-Struktur; ganze Abschnitte in Tinte als Gegenstück
 - Kondensierte, schwere Sportschrift für Nummern und Rückennamen; ruhige Barlow für Text
-- Doppelnaht (zwei gestrichelte Linien) als einziges Trennelement
+- Klare Linien statt Kästen; Karussells und eine Bewegung pro Element
 - Eine einzige Bewegung beim Laden (Flock wird aufgepresst) und eine Signatur-Interaktion (Trikot umdrehen)
 
 ## Colors
@@ -103,7 +103,7 @@ Zwei Clubfarben tragen alles. Neutrale Töne sind aus dem Schwarz des Flocks abg
 
 ### Named Rules
 **The Kit Rule.** Es gibt nur Gelb und Schwarz. Eine dritte Farbe kommt allein über echte Fotos und Partnerlogos auf die Seite.
-**The Reading-Surface Rule.** Weiß ist ein Etikett zum Lesen, nie ein Kartencontainer für Teaser oder Logos.
+**The No-Box Rule.** Keine weißen Kästen: Inhalte stehen direkt auf Gelb oder Tinte. Gliederung kommt aus Linien, Abstand und Schriftgröße.
 
 ## Typography
 
@@ -142,9 +142,11 @@ Tiefe entsteht durch Stoff, nicht durch schwebende Karten. Trikots werfen einen 
 ## Components
 
 - **Kragen (Navigation):** schwarz mit feinen Rippen, Logo-Wappen rund, Links mit wachsendem gelbem Unterstrich, Sprachwahl LB·FR·DE, gelber CTA.
-- **Trikot (Equipe):** Rücken mit Name und Nummer. Ein Klick dreht ein einziges preserve-3d-Element um 180° auf die Brustseite: Schulterpartie mit V-Ausschnitt, Wappen, Trainer und Trainingszeiten in Tinte auf Gelb. Es ist immer nur eines offen, und es liegt über den Nachbarn. Auf dem Handy öffnet die Brust ohne 3D über die volle Breite.
-- **Eingenähtes Etikett:** Trainingszeiten der Jugend, Hängeetikett-Button.
-- **Partner-Druck:** Logo direkt auf Gelb, im Ärmelbündchen und in „Op eisem Trikot“.
+- **Trikot (Equipe):** Rücken mit Name und Nummer. Antippen hebt das Trikot leicht an, die anderen treten zurück, und unter der Reihe klappt eine gelbe Bahn mit Nummer, Trainer und Trainingszeiten auf (Pfeil zeigt aufs Trikot). Immer nur eine offen.
+- **Trainingszeiten (Start):** direkt auf dem Gelb, ohne Kasten; Zeilen mit feinen Linien, Hängeetikett-Button.
+- **Partner-Druck:** Logo direkt auf Gelb (multiply), verlinkt auf die Seite des Partners. Im Ärmelbündchen als Laufband (pausiert beim Überfahren), unten als Raster.
+- **Matcher:** Karussell mit Karten auf Tinte, automatisch von der FLH (Handball4all): Schnappschuss beim Bauen, frisch bei jedem Besuch. Darunter „Live kucken“ (RTL Live Arena, flh-live.lu).
+- **Neiegkeeten:** Slideshow mit großem Bild (verschwommener Hintergrund aus demselben Foto), Titel, Text und Weiterlesen; Wischen, Pfeile, Punkte und Autoplay (6s, stoppt bei Berührung).
 - **Shorts (Fußzeile):** Tinte mit zwei gelben Seitenstreifen; dort steht der unauffällige „Login“.
 - **Admin-Leiste:** schwarze Pille unten (Beaarbechten · Verwalten · Réckgängeg · Späicheren · Méi), Panel rechts mit Reitern.
 

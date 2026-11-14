@@ -3,14 +3,14 @@
   "id": "i0cd5d20c64ba55a9",
   "name": "Tageblatt",
   "logo": "/fotos/i0cd5d20c64ba55a9.jpg",
-  "url": "",
+  "url": "https://www.tageblatt.lu/",
   "tier": "main"
  },
  {
   "id": "i5ebd4ba26af90271",
   "name": "Le Quotidien",
   "logo": "/fotos/i5ebd4ba26af90271.jpg",
-  "url": "",
+  "url": "https://www.lequotidien.lu/",
   "tier": "main"
  },
  {
@@ -24,28 +24,28 @@
   "id": "ie1684ee492f710a1",
   "name": "Nia Domo Real Estate Agency",
   "logo": "/fotos/ie1684ee492f710a1.jpg",
-  "url": "",
+  "url": "https://www.niadomo.lu/",
   "tier": "main"
  },
  {
   "id": "i9bc0d83a7904718a",
-  "name": "",
+  "name": "Spillplaz.lu",
   "logo": "/fotos/i9bc0d83a7904718a.jpg",
-  "url": "",
+  "url": "https://www.spillplaz.lu/",
   "tier": "main"
  },
  {
   "id": "i5d9c7f41199ed8ac",
   "name": "Hotel Threeland",
   "logo": "/fotos/i5d9c7f41199ed8ac.png",
-  "url": "http://www.hotelthreeland.lu/",
+  "url": "https://www.hotelthreeland.lu/",
   "tier": "main"
  },
  {
   "id": "i36bafdd3917d068a",
   "name": "Agence immobilière MaraMax",
   "logo": "/fotos/i36bafdd3917d068a.jpg",
-  "url": "",
+  "url": "https://maramax.lu/",
   "tier": "main"
  },
  {
@@ -94,14 +94,14 @@
   "id": "i3595660d1985eac0",
   "name": "Gemeng Péiteng",
   "logo": "/fotos/i3595660d1985eac0.png",
-  "url": "",
+  "url": "https://www.petange.lu/",
   "tier": "partner"
  },
  {
   "id": "i165041f686eda952",
   "name": "Raiffeisen",
   "logo": "/fotos/i165041f686eda952.jpg",
-  "url": "",
+  "url": "https://www.raiffeisen.lu/",
   "tier": "partner"
  },
  {

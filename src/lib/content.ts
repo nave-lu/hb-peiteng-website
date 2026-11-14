@@ -10,7 +10,9 @@ export interface Page { path: string; title: string; section: string; html: stri
 const files = import.meta.glob<Page>('../content/pages/*.json', { eager: true, import: 'default' });
 const imported: Page[] = Object.values(files);
 /* Rubrik „Archiv“ hatte auf der alten Seite keine eigene Übersicht; sie erscheint trotzdem im Menü. */
-export const pages: Page[] = [...imported, { path: '/noriichten-1/archiv/', title: 'Archiv', section: 'noriichten', html: '' }].sort((a, b) => a.path.localeCompare(b.path, 'lb'));
+/* Neue Beiträge (src/data/news.json) bekommen eine eigene Seite. */
+const posts: Page[] = (newsData as NewsItem[]).filter((n) => n.path && n.html).map((n) => ({ path: n.path, title: n.title, section: 'noriichten', html: n.html! }));
+export const pages: Page[] = [...imported, ...posts, { path: '/noriichten-1/archiv/', title: 'Archiv', section: 'noriichten', html: '' }].sort((a, b) => a.path.localeCompare(b.path, 'lb'));
 export const teams = teamsData as Team[];
 export const partners = partnersData as Partner[];
 
@@ -59,7 +61,7 @@ const excerpt = (html: string) => {
 export const news: NewsItem[] = [
   ...(newsData as NewsItem[]),
   ...pages
-    .filter((p) => p.path.startsWith('/noriichten-1/') && p.path.split('/').filter(Boolean).length === 3)
+    .filter((p) => p.path.startsWith('/noriichten-1/') && p.path.split('/').filter(Boolean).length === 3 && !posts.includes(p))
     .map((p) => {
       const cat = p.path.split('/')[2] as NewsItem['category'];
       return {

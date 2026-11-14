@@ -273,6 +273,9 @@ def parents(n):
         p = p.parent
 
 
+# Titel, die auf der alten Seite falsch gesetzt waren
+TITLE_FIX = {"/events/": "Events"}
+
 SECTIONS = {"hären-i": "equippen", "aner-equippen": "equippen", "club": "club", "partner": "club",
             "shop": "club", "kontakt": "club", "noriichten-1": "noriichten", "wisi-cup": "wisi-cup",
             "media": "media", "events": "events", "": "start"}
@@ -288,6 +291,7 @@ def main():
         raw = (base / p["datei"]).read_text()
         title = re.sub(r"\s*-\s*HB Péiteng\s*$", "", p["titel"]).strip(" *")
         path = p["pfad"]
+        title = TITLE_FIX.get(path, title)
         top = path.strip("/").split("/")[0]
         slug = path.strip("/").replace("/", "__") or "index"
         data = {"path": path, "title": title, "section": SECTIONS.get(top, "club"), "html": convert(raw)}

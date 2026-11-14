@@ -5,7 +5,7 @@
  * Speichern geht über storage.ts (Demo: dieser Browser; Betrieb: api.php). */
 import './editor.css';
 import { storage, emptyState, preloadImages, type EditState } from './storage';
-import { teamsGrid, youthLabel, partnerPatches, newsList, newsPatch, type NewsItem, type Partner, type Team } from '../lib/render';
+import { teamsGrid, youthLabel, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
 import { UI, LANGS, href, type Lang } from '../i18n/ui';
 
 const lang = (document.body.dataset.lang || 'lb') as Lang;
@@ -53,7 +53,7 @@ function render() {
     else if (kind === 'youth-label') el.innerHTML = youthLabel(t, lang);
     else if (kind === 'partners-main') el.innerHTML = partnerPatches(p, 'main');
     else if (kind === 'partners-rest') el.innerHTML = partnerPatches(p, 'partner');
-    else if (kind === 'news') el.innerHTML = newsList(n, lang, 4);
+    else if (kind === 'news-slides') el.innerHTML = newsSlides(n, lang);
     else if (kind === 'news-index') {
       const cat = el.dataset.cat;
       el.innerHTML = newsList(n.filter((x) => (cat ? x.category === cat || (x.category === 'neu' && cat === 'hb-péiteng') : x.category !== 'archiv')), lang);
