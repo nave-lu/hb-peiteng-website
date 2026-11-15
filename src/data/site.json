@@ -2,13 +2,47 @@
   "name": "HB Péiteng",
   "fullName": "Handball Club vun der Gemeng Péiteng a.s.b.l.",
   "founded": "1962-09-21",
-  "address": ["B.P. 62", "L-4701 Péiteng"],
-  "emails": { "president": "president@hbpeiteng.com", "club": "ca@hbpeiteng.com", "wisiCup": "wisi-cup@hbpeiteng.com" },
+  "address": [
+    "B.P. 62",
+    "L-4701 Péiteng"
+  ],
+  "emails": {
+    "president": "president@hbpeiteng.com",
+    "club": "ca@hbpeiteng.com",
+    "wisiCup": "wisi-cup@hbpeiteng.com"
+  },
   "phone": "",
   "halls": [
-    { "id": "bim-diederich", "name": "Centre sportif „Bim Diederich“", "street": "rue Pierre Hamer", "city": "L-4737 Péiteng", "page": "/club/sportshalen/bim-diederich/", "map": "https://www.openstreetmap.org/search?query=rue%20Pierre%20Hamer%20P%C3%A9tange" },
-    { "id": "rodange", "name": "Sportshal Rodange", "street": "rue Jos. Moscardo", "city": "L-4840 Rodange", "page": "/club/sportshalen/hal-rodange-1/", "map": "https://www.openstreetmap.org/search?query=rue%20Jos%20Moscardo%20Rodange" },
-    { "id": "belval", "name": "Hal „Kannercampus“", "street": "", "city": "Belval", "page": "", "map": "https://www.openstreetmap.org/search?query=Kannercampus%20Belval" }
+    {
+      "id": "bim-diederich",
+      "name": "Centre sportif „Bim Diederich“",
+      "street": "rue Pierre Hamer",
+      "city": "L-4737 Péiteng",
+      "page": "/club/sportshalen/bim-diederich/",
+      "map": "https://www.google.com/maps/search/?api=1&query=Centre%20sportif%20Bim%20Diederich%2C%20rue%20Pierre%20Hamer%2C%20L-4737%20P%C3%A9tange",
+      "lat": 49.5584563,
+      "lon": 5.8696031
+    },
+    {
+      "id": "rodange",
+      "name": "Sportshal Rodange",
+      "street": "rue Jos. Moscardo",
+      "city": "L-4840 Rodange",
+      "page": "/club/sportshalen/hal-rodange-1/",
+      "map": "https://www.google.com/maps/search/?api=1&query=Sportshal%20Rodange%2C%20rue%20Jos.%20Moscardo%2C%20L-4840%20Rodange",
+      "lat": 49.5462369,
+      "lon": 5.83611
+    },
+    {
+      "id": "belval",
+      "name": "Hal „Kannercampus“",
+      "street": "",
+      "city": "Belval",
+      "page": "",
+      "map": "https://www.google.com/maps/search/?api=1&query=Hal%20Kannercampus%2C%20Belval",
+      "lat": 49.5066938,
+      "lon": 5.9352619
+    }
   ],
   "links": {
     "flhKlassement": "https://www.flh.lu/championnat#/schedule",
@@ -16,5 +50,8 @@
     "refill": "https://www.re-fill.store/fr/collections/handball-peiteng",
     "facebook": ""
   },
-  "bank": ["BCEE: LU70 0019 6600 0580 8000", "CCRA: LU17 0090 0000 1643 1108"]
+  "bank": [
+    "BCEE: LU70 0019 6600 0580 8000",
+    "CCRA: LU17 0090 0000 1643 1108"
+  ]
 }

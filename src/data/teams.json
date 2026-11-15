@@ -1,111 +1,261 @@
 [
   {
-    "id": "haeren-1", "nr": "1", "group": "seniors",
-    "name": { "lb": "Hären I", "fr": "Hommes I", "de": "Herren I" },
-    "league": "AXA League", "years": "",
+    "id": "haeren-1",
+    "nr": "1",
+    "group": "seniors",
+    "name": {
+      "lb": "Hären I",
+      "fr": "Hommes I",
+      "de": "Herren I"
+    },
+    "league": "Promotioun Hären",
+    "years": "",
     "coach": "Kevin DUBOUTAY a Guy MOLITOR",
     "photo": "/fotos/i4e34ffcdf302352f.jpg",
     "page": "/hären-i/trainingszäiten/",
     "training": [
-      { "day": "tue", "time": "19:30 – 21:30", "hall": "Bim Diederich, Péiteng" },
-      { "day": "thu", "time": "19:30 – 21:30", "hall": "Bim Diederich, Péiteng" },
-      { "day": "fri", "time": "19:00 – 20:30", "hall": "Bim Diederich, Péiteng / Sportshal Rodange" }
+      {
+        "day": "tue",
+        "time": "19:30 – 21:30",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "thu",
+        "time": "19:30 – 21:30",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "fri",
+        "time": "19:00 – 20:30",
+        "hall": "Bim Diederich, Péiteng / Sportshal Rodange"
+      }
     ],
-    "hidden": false
+    "hidden": false,
+    "flh": "Hären 1",
+    "flhClass": "167931"
   },
   {
-    "id": "haeren-2", "nr": "2", "group": "seniors",
-    "name": { "lb": "Hären II", "fr": "Hommes II", "de": "Herren II" },
-    "league": "Promotioun Hären", "years": "",
+    "id": "haeren-2",
+    "nr": "2",
+    "group": "seniors",
+    "name": {
+      "lb": "Hären II",
+      "fr": "Hommes II",
+      "de": "Herren II"
+    },
+    "league": "Promotioun Hären · Infos Stand Saison 2022/2023",
+    "years": "",
     "coach": "Eldin SOFTIC",
     "photo": "/fotos/i494d9c3c89a3a509.jpg",
     "page": "/aner-equippen/hären-ii/",
     "training": [
-      { "day": "thu", "time": "20:00 – 22:00", "hall": "Bim Diederich, Annexe, Péiteng" }
+      {
+        "day": "thu",
+        "time": "20:00 – 22:00",
+        "hall": "Bim Diederich, Annexe, Péiteng"
+      }
     ],
-    "hidden": false
+    "hidden": false,
+    "flh": "Hären 2"
   },
   {
-    "id": "dammen", "nr": "D", "group": "seniors",
-    "name": { "lb": "Dammen", "fr": "Dames", "de": "Damen" },
-    "league": "Promotion Nationale · Entente HB Bieles – HB Péiteng", "years": "2008 – …",
+    "id": "dammen",
+    "nr": "D",
+    "group": "seniors",
+    "name": {
+      "lb": "Dammen",
+      "fr": "Dames",
+      "de": "Damen"
+    },
+    "league": "Promotion Nationale · Entente HB Bieles – HB Péiteng",
+    "years": "2008 – …",
     "coach": "Kenan STARCEVIC",
     "photo": "/fotos/i40813d090c319724.jpg",
     "page": "/aner-equippen/dammen-entente-hb-bieles-hb-péiteng/",
     "training": [
-      { "day": "mon", "time": "19:00 – 20:30", "hall": "Bim Diederich, Péiteng" },
-      { "day": "wed", "time": "19:00 – 20:30", "hall": "Hal Kannercampus, Belval" },
-      { "day": "fri", "time": "19:00 – 20:30", "hall": "Hal Kannercampus, Belval" }
+      {
+        "day": "mon",
+        "time": "19:00 – 20:30",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "wed",
+        "time": "19:00 – 20:30",
+        "hall": "Hal Kannercampus, Belval"
+      },
+      {
+        "day": "fri",
+        "time": "19:00 – 20:30",
+        "hall": "Hal Kannercampus, Belval"
+      }
     ],
-    "hidden": false
+    "hidden": false,
+    "flh": "Dammen",
+    "flhClass": "168031"
   },
   {
-    "id": "u21", "nr": "21", "group": "youth",
-    "name": { "lb": "U21 Jongen", "fr": "U21 Garçons", "de": "U21 Jungen" },
-    "league": "trainéieren mat den Hären 1", "years": "",
-    "coach": "Adam SZULC",
-    "photo": "",
-    "page": "/aner-equippen/jugend/u21-jongen/",
-    "training": [
-      { "day": "mon", "time": "19:30 – 22:00", "hall": "Bim Diederich, Annexe, Péiteng" },
-      { "day": "tue", "time": "19:30 – 22:00", "hall": "Bim Diederich, Péiteng" },
-      { "day": "thu", "time": "19:30 – 22:00", "hall": "Bim Diederich, Péiteng" },
-      { "day": "fri", "time": "19:30 – 21:30", "hall": "Bim Diederich, Péiteng / Sportshal Rodange" }
-    ],
-    "hidden": false
-  },
-  {
-    "id": "u15", "nr": "15", "group": "youth",
-    "name": { "lb": "U15 Jongen + Meedercher", "fr": "U15 Garçons + Filles", "de": "U15 Jungen + Mädchen" },
-    "league": "", "years": "2012 – 2013",
-    "coach": "",
-    "photo": "",
-    "page": "/aner-equippen/jugend/u15-jongen-meedercher/",
-    "training": [
-      { "day": "tue", "time": "17:30 – 19:00", "hall": "Bim Diederich, Péiteng" },
-      { "day": "thu", "time": "17:30 – 19:00", "hall": "Bim Diederich, Péiteng" }
-    ],
-    "hidden": false
-  },
-  {
-    "id": "u13", "nr": "13", "group": "youth",
-    "name": { "lb": "U13 Mixte", "fr": "U13 Mixte", "de": "U13 Mixed" },
-    "league": "", "years": "2014 + 2015",
-    "coach": "Raphaël FERNANDEZ an Anne-Marie TASCARELLA",
-    "photo": "/fotos/i79904a20c2813fc7.jpg",
-    "page": "/aner-equippen/jugend/u13-mixte/",
-    "training": [
-      { "day": "tue", "time": "17:30 – 19:00", "hall": "Bim Diederich, Péiteng" },
-      { "day": "thu", "time": "17:30 – 19:00", "hall": "Bim Diederich, Péiteng" },
-      { "day": "fri", "time": "17:30 – 19:00", "hall": "Bim Diederich, Annexe, Péiteng" }
-    ],
-    "hidden": false
-  },
-  {
-    "id": "u11", "nr": "11", "group": "youth",
-    "name": { "lb": "U11 Mixte", "fr": "U11 Mixte", "de": "U11 Mixed" },
-    "league": "", "years": "2016 + 2017",
-    "coach": "Joël REINACHTER",
-    "photo": "",
-    "page": "/aner-equippen/jugend/u11-mixte/",
-    "training": [
-      { "day": "mon", "time": "17:15 – 18:30", "hall": "Bim Diederich, Annexe, Péiteng" },
-      { "day": "tue", "time": "17:30 – 19:00", "hall": "Bim Diederich, Péiteng" },
-      { "day": "thu", "time": "17:30 – 19:00", "hall": "Bim Diederich, Péiteng" }
-    ],
-    "hidden": false
-  },
-  {
-    "id": "u9", "nr": "9", "group": "youth",
-    "name": { "lb": "U9 Mixte", "fr": "U9 Mixte", "de": "U9 Mixed" },
-    "league": "", "years": "2018 – 2021",
+    "id": "u9",
+    "nr": "9",
+    "group": "youth",
+    "name": {
+      "lb": "U9 Mixte",
+      "fr": "U9 Mixte",
+      "de": "U9 Mixed"
+    },
+    "league": "",
+    "years": "2018 – 2021",
     "coach": "Tom MOLITOR an Yann DUBOUTAY",
     "photo": "/fotos/i19ccfea062a44b99.jpg",
     "page": "/aner-equippen/jugend/u9-mixte/",
     "training": [
-      { "day": "tue", "time": "17:15 – 18:30", "hall": "Bim Diederich, Annexe, Péiteng" },
-      { "day": "thu", "time": "17:15 – 18:30", "hall": "Bim Diederich, Annexe, Péiteng" }
+      {
+        "day": "tue",
+        "time": "17:15 – 18:30",
+        "hall": "Bim Diederich, Annexe, Péiteng"
+      },
+      {
+        "day": "thu",
+        "time": "17:15 – 18:30",
+        "hall": "Bim Diederich, Annexe, Péiteng"
+      }
     ],
-    "hidden": false
+    "hidden": false,
+    "flh": "U9"
+  },
+  {
+    "id": "u11",
+    "nr": "11",
+    "group": "youth",
+    "name": {
+      "lb": "U11 Mixte",
+      "fr": "U11 Mixte",
+      "de": "U11 Mixed"
+    },
+    "league": "",
+    "years": "2016 + 2017",
+    "coach": "Joël REINACHTER",
+    "photo": "",
+    "page": "/aner-equippen/jugend/u11-mixte/",
+    "training": [
+      {
+        "day": "mon",
+        "time": "17:15 – 18:30",
+        "hall": "Bim Diederich, Annexe, Péiteng"
+      },
+      {
+        "day": "tue",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "thu",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Péiteng"
+      }
+    ],
+    "hidden": false,
+    "flh": "U11 Mixte"
+  },
+  {
+    "id": "u13",
+    "nr": "13",
+    "group": "youth",
+    "name": {
+      "lb": "U13 Mixte",
+      "fr": "U13 Mixte",
+      "de": "U13 Mixed"
+    },
+    "league": "",
+    "years": "2014 + 2015",
+    "coach": "Raphaël FERNANDEZ an Anne-Marie TASCARELLA",
+    "photo": "/fotos/i79904a20c2813fc7.jpg",
+    "page": "/aner-equippen/jugend/u13-mixte/",
+    "training": [
+      {
+        "day": "tue",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "thu",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "fri",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Annexe, Péiteng"
+      }
+    ],
+    "hidden": false,
+    "flh": "U13 Mixte"
+  },
+  {
+    "id": "u15",
+    "nr": "15",
+    "group": "youth",
+    "name": {
+      "lb": "U15 Jongen + Meedercher",
+      "fr": "U15 Garçons + Filles",
+      "de": "U15 Jungen + Mädchen"
+    },
+    "league": "",
+    "years": "2012 – 2013",
+    "coach": "",
+    "photo": "",
+    "page": "/aner-equippen/jugend/u15-jongen-meedercher/",
+    "training": [
+      {
+        "day": "tue",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "thu",
+        "time": "17:30 – 19:00",
+        "hall": "Bim Diederich, Péiteng"
+      }
+    ],
+    "hidden": false,
+    "flh": "U15"
+  },
+  {
+    "id": "u21",
+    "nr": "21",
+    "group": "youth",
+    "name": {
+      "lb": "U21 Jongen",
+      "fr": "U21 Garçons",
+      "de": "U21 Jungen"
+    },
+    "league": "trainéieren mat den Hären 1",
+    "years": "",
+    "coach": "Adam SZULC",
+    "photo": "",
+    "page": "/aner-equippen/jugend/u21-jongen/",
+    "training": [
+      {
+        "day": "mon",
+        "time": "19:30 – 22:00",
+        "hall": "Bim Diederich, Annexe, Péiteng"
+      },
+      {
+        "day": "tue",
+        "time": "19:30 – 22:00",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "thu",
+        "time": "19:30 – 22:00",
+        "hall": "Bim Diederich, Péiteng"
+      },
+      {
+        "day": "fri",
+        "time": "19:30 – 21:30",
+        "hall": "Bim Diederich, Péiteng / Sportshal Rodange"
+      }
+    ],
+    "hidden": false,
+    "flh": "U21"
   }
 ]

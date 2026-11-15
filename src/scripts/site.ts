@@ -1,5 +1,5 @@
 /* Kleine Helfer für alle Besucher: Menü, Trikots, Karussells, Live-Matcher, Fotogalerie. */
-import { fetchClubMatches, matchCards } from '../lib/matches';
+import { weekGames, fetchTables, mergeMatches, windowMatches, matchCards, tablesHtml, liveMatch, teamMatches, teamLiveHtml, classStubs, MAIN_TABLE_TEAMS, type Match, type Table, type LiveMode } from '../lib/matches';
 import type { Lang } from '../i18n/ui';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -74,7 +74,7 @@ function setupCarousel(root: HTMLElement) {
   if (!track || root.dataset.ready) return;
   root.dataset.ready = '1';
   const items = () => [...track.children] as HTMLElement[];
-  const step = () => (items()[0]?.getBoundingClientRect().width ?? track.clientWidth) + parseFloat(getComputedStyle(track).columnGap || '0');
+  const step = () => (items()[0]?.getBoundingClientRect().width ?? track.clientWidth) + (parseFloat(getComputedStyle(track).columnGap) || 0);
   const go = (dir: number) => {
     const max = track.scrollWidth - track.clientWidth - 2;
     const next = dir > 0 && track.scrollLeft >= max ? 0 : dir < 0 && track.scrollLeft <= 2 ? max : track.scrollLeft + dir * step();
@@ -92,9 +92,13 @@ function setupCarousel(root: HTMLElement) {
   track.addEventListener('scroll', () => requestAnimationFrame(paint), { passive: true });
   paint();
   let timer = 0;
-  const stop = () => { clearInterval(timer); timer = 0; };
+  let stopped = false;
+  const pause = () => { clearInterval(timer); timer = 0; };
+  const stop = () => { stopped = true; pause(); };
   if (root.hasAttribute('data-autoplay') && !reduced) {
-    timer = window.setInterval(() => { if (!document.hidden && !editing()) go(1); }, 6000);
+    // erst weiterblättern, wenn man die Slideshow wirklich sieht; außer Sicht wieder anhalten
+    const play = () => { if (!timer && !stopped) timer = window.setInterval(() => { if (!document.hidden && !editing()) go(1); }, 6000); };
+    new IntersectionObserver(([en]) => (en.intersectionRatio >= 0.6 ? play() : pause()), { threshold: [0, 0.6] }).observe(root);
     ['pointerdown', 'focusin', 'mouseenter'].forEach((e) => root.addEventListener(e, stop, { once: true }));
   }
   // Matcher: zum ersten Match ab heute springen (Resultater vun der leschter Woch stinn virdrun)
@@ -106,18 +110,97 @@ function setupCarousel(root: HTMLElement) {
 document.querySelectorAll<HTMLElement>('[data-carousel]').forEach(setupCarousel);
 
 /* ---------- Matcher: jedes Mal frisch von der FLH ---------- */
+/* Live-Daten: Schnappschuss vom Bauen + laufende und letzte Woche frisch von der FLH.
+ * Pro Browser höchstens alle 5 Minuten (sessionStorage), damit die FLH uns nicht sperrt. */
+type Base = { matches: Match[]; tables: Table[] };
+const readBase = (root: ParentNode): Base => {
+  try { return JSON.parse(root.querySelector('[data-flh-base]')?.textContent || '{}'); } catch { return { matches: [], tables: [] }; }
+};
+async function cached<T>(key: string, fn: () => Promise<T>, ttl = 5 * 60e3): Promise<T> {
+  try {
+    const hit = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (hit && Date.now() - hit.t < ttl) return hit.v as T;
+  } catch { /* egal */ }
+  const v = await fn();
+  try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch { /* egal */ }
+  return v;
+}
+const lastWeek = () => new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+const freshWeeks = () => cached('flh-weeks-v2', async () => [...(await weekGames()), ...(await weekGames(lastWeek()).catch(() => []))]);
+const freshTables = (m: Match[]) => cached('flh-tables-v2-' + [...new Set(m.map((x) => x.classId))].sort().join('-'), () => fetchTables(m));
+
 const box = document.querySelector<HTMLElement>('[data-matches]');
+const liveEl = document.querySelector<HTMLElement>('[data-live]');
+const liveLabel = { lb: 'Elo live', fr: 'En direct', de: 'Jetzt live' } as Record<string, string>;
+function paintLive(m: Match[]) {
+  if (!liveEl) return;
+  const now = liveMatch(m);
+  liveEl.classList.toggle('is-live', !!now);
+  const b = liveEl.querySelector('.live-now');
+  if (b) b.textContent = now ? `${liveLabel[document.documentElement.lang] ?? liveLabel.lb}: ${now.home} – ${now.guest}` : '';
+}
 if (box) {
-  fetchClubMatches()
-    .then((m) => {
-      if (!m.length) return;
-      box.innerHTML = matchCards(m, (box.dataset.lang || 'lb') as Lang);
+  const lang = (box.dataset.lang || 'lb') as Lang;
+  const base = readBase(box.parentElement!);
+  paintLive(base.matches);
+  const refresh = () => freshWeeks()
+    .then(async (fresh) => {
+      const m = windowMatches(mergeMatches(base.matches, fresh));
+      box.innerHTML = matchCards(m, lang);
       const root = box.closest<HTMLElement>('[data-carousel]')!;
       delete root.dataset.ready;
       setupCarousel(root);
+      paintLive(m);
+      // Klassement: nur Hären und Dammen; feste Ligen aus teams.json, falls eine Equipe gerade nicht spielt
+      let stubs: { team: string; classId: string }[] = [];
+      try { stubs = JSON.parse(document.querySelector<HTMLElement>('[data-tables]')?.dataset.classes || '[]'); } catch { /* egal */ }
+      const own = m.filter((x) => MAIN_TABLE_TEAMS.includes(x.team));
+      const known = new Set(own.map((x) => x.team));
+      const tables = (await freshTables([...own, ...classStubs(stubs.filter((x) => !known.has(x.team)))]).catch(() => base.tables)).filter((x) => MAIN_TABLE_TEAMS.includes(x.team));
+      const tb = document.querySelector<HTMLElement>('[data-tables-body]');
+      const sel = tb?.querySelector('[aria-selected="true"]')?.getAttribute('data-tab');
+      if (tb && tables.length) {
+        tb.innerHTML = tablesHtml(tables, lang);
+        if (sel) tb.querySelector<HTMLElement>(`[data-tab="${sel}"]`)?.click();
+      }
     })
-    .catch(() => { /* Schnappschuss vom Bauen bleibt stehen */ });
+    .catch(() => { /* Schnappschuss bleibt stehen */ });
+  refresh();
+  // während eines Matches alle 2 Minuten (Cache läuft dann kürzer), sonst alle 15 Minuten
+  setInterval(() => {
+    if (document.hidden) return;
+    if (liveEl?.classList.contains('is-live')) try { sessionStorage.removeItem('flh-weeks-v2'); } catch { /* egal */ }
+    refresh();
+  }, liveEl?.classList.contains('is-live') ? 120000 : 900000);
 }
+
+/* Mannschafts- und Resultat-Seiten: Schnappschuss + laufende Woche */
+const teamLive = document.querySelector<HTMLElement>('[data-team-live]');
+if (teamLive) {
+  const { teamLive: team, mode, lang, hResults, hTable } = teamLive.dataset as Record<string, string>;
+  const base = readBase(teamLive);
+  const keep = teamLive.querySelector('[data-flh-base]')!;
+  freshWeeks()
+    .then(async (fresh) => {
+      const list = teamMatches(mergeMatches(base.matches, fresh), team, mode as LiveMode);
+      const tables = mode === 'cup' ? [] : await freshTables(list).catch(() => base.tables);
+      const html = teamLiveHtml(list, tables, mode as LiveMode, lang as Lang, { results: hResults, table: hTable });
+      // nur ersetzen, wenn wirklich etwas Neues da ist (sonst bleibt Schnappschuss bzw. Link auf flh.lu)
+      if (!html || (mode === 'table' && !tables.length)) return;
+      teamLive.innerHTML = html;
+      teamLive.append(keep);
+    })
+    .catch(() => { /* Schnappschuss bleibt */ });
+}
+
+// Klassement: Reiter
+document.addEventListener('click', (ev) => {
+  const tab = (ev.target as HTMLElement).closest<HTMLElement>('.table-tabs [data-tab]');
+  if (!tab) return;
+  const wrap = tab.closest('[data-tables-body], .tables-light')!;
+  wrap.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b === tab)));
+  wrap.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab.dataset.tab));
+});
 
 /* ---------- Fotogalerie im Vollbild ---------- */
 const lb = document.querySelector<HTMLDialogElement>('.lightbox');
@@ -128,16 +211,28 @@ const show = () => {
   if (!img) { img = document.createElement('img'); img.alt = ''; lb!.prepend(img); }
   img.src = list[idx];
 };
+/* Groß ansehen: Fotos in Galerien und alle einzelnen Fotos im Seiteninhalt (z. B. Team-Fotos unten),
+ * aber keine Fotos, die selbst ein Link sind (Partner-Logos, Werbebanner). */
+const zoomable = (img: Element) => img.matches('.prose figure img, .prose .team-photos img, .prose .cols img, .prose .text-image img') && !img.closest('a');
 document.addEventListener('click', (ev) => {
-  if (editing()) return;
-  const a = (ev.target as HTMLElement).closest('.gallery a') as HTMLAnchorElement | null;
-  if (!a || !lb) return;
-  ev.preventDefault();
-  list = [...a.closest('.gallery')!.querySelectorAll('a')].map((x) => (x as HTMLAnchorElement).href);
-  idx = list.indexOf(a.href);
+  if (editing() || !lb) return;
+  const target = ev.target as HTMLElement;
+  const a = target.closest('.gallery a') as HTMLAnchorElement | null;
+  if (a) {
+    ev.preventDefault();
+    list = [...a.closest('.gallery')!.querySelectorAll('a')].map((x) => (x as HTMLAnchorElement).href);
+    idx = list.indexOf(a.href);
+  } else if (target.tagName === 'IMG' && zoomable(target)) {
+    // alle vergrößerbaren Fotos derselben Seite, damit man mit den Pfeilen weiterblättern kann
+    const imgs = [...target.closest('.prose')!.querySelectorAll('img')].filter(zoomable) as HTMLImageElement[];
+    list = imgs.map((x) => x.currentSrc || x.src);
+    idx = imgs.indexOf(target as HTMLImageElement);
+  } else return;
   show();
   lb.showModal();
 });
+// Hinweis, dass man Fotos anklicken kann
+document.querySelectorAll('.prose img').forEach((img) => { if (zoomable(img)) img.classList.add('is-zoomable'); });
 lb?.querySelector('.lb-close')?.addEventListener('click', () => lb.close());
 lb?.querySelector('.lb-prev')?.addEventListener('click', () => { idx = (idx - 1 + list.length) % list.length; show(); });
 lb?.querySelector('.lb-next')?.addEventListener('click', () => { idx = (idx + 1) % list.length; show(); });
@@ -153,4 +248,11 @@ if (!reduced && 'IntersectionObserver' in window) {
     if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
   }), { rootMargin: '0px 0px -8% 0px' });
   document.querySelectorAll('.reveal').forEach((el) => { el.classList.add('will-reveal'); io.observe(el); });
+  // Rasters (Trikoten, Partner, Neiegkeeten) kommen nacheinander
+  document.querySelectorAll<HTMLElement>('.rack, .patches, .news-index').forEach((el) => {
+    [...el.children].forEach((c, i) => (c as HTMLElement).style.setProperty('--i', String(Math.min(i, 12))));
+    el.classList.add('stagger');
+    io.observe(el);
+  });
 }
+

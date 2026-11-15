@@ -28,7 +28,7 @@ export function getStaticPaths() {
       { page: { path: '/trainingszäiten/', title: t(lang, 'label.all'), section: 'equippen', html: '' }, extra: `<div data-render="week" class="week">${week}</div><p style="margin-top:2em"><a class="btn" href="${href(lang, '/club/gëff-handballspiller-inn/')}">${t(lang, 'cta.training')}</a></p>` },
       {
         page: { path: '/kontakt/', title: t(lang, 'contact.title'), section: 'club', html: '' },
-        extra: `<p>${t(lang, 'contact.lead')}</p><div class="contact-grid"><div><h2>${t(lang, 'contact.secretary')}</h2><p>${mail(site.emails.club)}</p></div><div><h2>${t(lang, 'contact.president')}</h2><p>${mail(site.emails.president)}</p></div><div><h2>${t(lang, 'contact.wisi')}</h2><p>${mail(site.emails.wisiCup)}</p></div></div><h2>${t(lang, 'footer.address')}</h2><p>${site.fullName}<br>${site.address.join('<br>')}</p><h2>${t(lang, 'footer.halls')}</h2><ul>${site.halls.map((h) => `<li><strong>${h.name}</strong>${h.street || h.city ? `, ${[h.street, h.city].filter(Boolean).join(', ')}` : ''} · <a href="${h.map}" target="_blank" rel="noopener">Kaart</a></li>`).join('')}</ul>`,
+        extra: `<p>${t(lang, 'contact.lead')}</p><div class="contact-grid"><div><h2>${t(lang, 'contact.secretary')}</h2><p>${mail(site.emails.club)}</p></div><div><h2>${t(lang, 'contact.president')}</h2><p>${mail(site.emails.president)}</p></div><div><h2>${t(lang, 'contact.wisi')}</h2><p>${mail(site.emails.wisiCup)}</p></div></div><h2 id="partner">${t(lang, 'contact.partner')}</h2><p>${t(lang, 'contact.partnerText')}</p><p><a class="btn" href="mailto:${site.emails.president}?subject=${encodeURIComponent(t(lang, 'contact.partner') + ' – HB Péiteng')}">${site.emails.president}</a></p><h2>${t(lang, 'footer.address')}</h2><p>${site.fullName}<br>${site.address.join('<br>')}</p><h2>${t(lang, 'footer.halls')}</h2><ul>${site.halls.map((h) => `<li><strong>${h.name}</strong>${h.street || h.city ? `, ${[h.street, h.city].filter(Boolean).join(', ')}` : ''} · <a href="${h.map}" target="_blank" rel="noopener">Kaart (Google Maps)</a></li>`).join('')}</ul>`,
       },
       {
         page: { path: '/impressum/', title: t(lang, 'footer.legal'), section: 'club', html: '' },
@@ -36,7 +36,7 @@ export function getStaticPaths() {
       },
       {
         page: { path: '/dateschutz/', title: t(lang, 'footer.privacy'), section: 'club', html: '' },
-        extra: `<p><strong>[FEHLT]</strong> Dateschutzerklärung vum Club, ze kréien a ze préiwen.</p><p>Dës Säit setzt keng Cookien a keng Statistik-Tools an. Videoe vu Vimeo ginn eréischt gelueden, wann d'Säit mat engem Video opgemaach gëtt.</p>`,
+        extra: `<p><strong>[FEHLT]</strong> Dateschutzerklärung vum Club, ze kréien a ze préiwen.</p><p>Dës Säit setzt keng Cookien a keng Statistik-Tools an. Videoe vu Vimeo ginn eréischt gelueden, wann d'Säit mat engem Video opgemaach gëtt. D'Kaarten op de Säite vun de Sportshalen kommen vun OpenStreetMap (openstreetmap.org) a ginn nëmmen do gelueden.</p>`,
       },
       { page: { path: '/noriichten-1/archiv/', title: t(lang, 'news.archive'), section: 'noriichten', html: '' } },
       { page: { path: '/noriichten-1/neu/', title: t(lang, 'news.title'), section: 'noriichten', html: '' }, extra: '<div data-render="news-draft"></div>' },

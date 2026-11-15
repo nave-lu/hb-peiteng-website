@@ -4,24 +4,51 @@ import site from '../data/site.json';
 import { t, href, type Lang } from '../i18n/ui';
 import { teams, partners, news } from '../lib/content';
 import { teamsGrid, youthLabel, partnerPatches, newsSlides } from '../lib/render';
-import { fetchClubMatches, matchCards } from '../lib/matches';
+import { windowMatches, matchCards, tablesHtml, liveMatch, MAIN_TABLE_TEAMS, type Match, type Table } from '../lib/matches';
+import flh from '../data/flh.json';
+import { handballSvg } from '../lib/handball';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 // Schnappschuss beim Bauen; im Browser wird sofort neu geladen (src/scripts/site.ts).
-const matches = await fetchClubMatches().catch(() => []);
+// Schnappschuss aus `npm run sync`; im Browser wird die laufende Woche nachgeladen (src/scripts/site.ts).
+const matches = windowMatches(flh.matches as Match[]);
+const tables = (flh.tables as Table[]).filter((x) => MAIN_TABLE_TEAMS.includes(x.team));
+// Ersatz-Ligen aus teams.json (Hären, Dammen), damit beide Reiter immer da sind
+const tableClasses = teams.filter((x) => x.flhClass && MAIN_TABLE_TEAMS.includes(x.flh ?? '')).map((x) => ({ team: x.flh!, classId: x.flhClass! }));
+const live = liveMatch(matches);
 const rtl = 'https://www.rtl.lu/sport/live-arena';
 ---
 <Base lang={lang} title="Start" path="/">
   <div class="hero-wrap">
     <section class="wrap back" aria-labelledby="hero-title">
       <div class="back-print" aria-hidden="true">
-        <svg class="back-name" viewBox="0 0 720 170" role="presentation">
-          <path id="arc" d="M40 160 Q360 20 680 160" fill="none" />
-          <text text-anchor="middle"><textPath href="#arc" startOffset="50%" data-edit="ui:hero.back">{t(lang, 'hero.back')}</textPath></text>
-        </svg>
-        <div class="back-nr">62</div>
-        <p class="back-since" data-edit="ui:hero.since">{t(lang, 'hero.since')}</p>
+        <div class="nr-wrap">
+          {/* Name, Nummer und Gründungsjahr bilden eine Spalte: PÉITENG steht immer mittig über der 62 */}
+          <div class="nr-col">
+            <svg class="back-name" viewBox="0 0 720 170" role="presentation">
+              <path id="arc" d="M40 160 Q360 20 680 160" fill="none" />
+              <text text-anchor="middle"><textPath href="#arc" startOffset="50%" data-edit="ui:hero.back">{t(lang, 'hero.back')}</textPath></text>
+            </svg>
+            <div class="back-nr">62</div>
+            <p class="back-since" data-edit="ui:hero.since">{t(lang, 'hero.since')}</p>
+          </div>
+          {/* Tor neben der 62 mit Clublogo im Netz und dem Ball davor (ruhig, ohne Animation) */}
+          <div class="hero-goal">
+            <svg class="goal" viewBox="0 0 300 200" aria-hidden="true">
+              <g class="net">
+                <path class="net-back" d="M34 30 L266 30 L266 196 L34 196 Z" />
+                <path class="net-lines" d="M14 14 L34 30 M286 14 L266 30 M34 30 L34 196 M266 30 L266 196 M34 30 L266 30 M60 30 L60 196 M86 30 L86 196 M112 30 L112 196 M138 30 L138 196 M164 30 L164 196 M190 30 L190 196 M216 30 L216 196 M242 30 L242 196 M34 54 L266 54 M34 78 L266 78 M34 102 L266 102 M34 126 L266 126 M34 150 L266 150 M34 174 L266 174 M14 60 L34 66 M14 110 L34 112 M14 160 L34 158 M286 60 L266 66 M286 110 L266 112 M286 160 L266 158" />
+              </g>
+              <path class="post" d="M14 198 L14 14 L286 14 L286 198" />
+              <path class="post-stripes" d="M14 198 L14 14 L286 14 L286 198" />
+            </svg>
+            <img class="goal-logo" src="/brand/hbp-logo.jpg" alt="HB Péiteng" width="120" height="120" />
+            <span class="goal-floor"></span>
+            <span class="goal-shadow"></span>
+            <span class="goal-ball"><Fragment set:html={handballSvg('hb-goal')} /></span>
+          </div>
+        </div>
       </div>
       <div class="back-copy">
         <h1 id="hero-title" data-edit="ui:hero.title">{t(lang, 'hero.title')}</h1>
@@ -56,11 +83,16 @@ const rtl = 'https://www.rtl.lu/sport/live-arena';
       </div>
       <div class="carousel" data-carousel>
         <div class="carousel-track matches" data-matches data-lang={lang} set:html={matchCards(matches, lang)} />
+        <script type="application/json" data-flh-base set:html={JSON.stringify({ matches, tables }).replace(/</g, "\\u003c")} />
         <div class="carousel-nav">
           <button type="button" class="car-btn" data-dir="-1" aria-label={t(lang, 'matches.prev')}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4L6.5 10l6 6" /></svg></button>
           <button type="button" class="car-btn" data-dir="1" aria-label={t(lang, 'matches.next')}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6" /></svg></button>
-          <a class="text-link" href={site.links.flhKlassement} target="_blank" rel="noopener">{t(lang, 'weekend.table')}</a>
+          <a class="text-link" href="#klassement">{t(lang, 'table.title')}</a>
         </div>
+      </div>
+      <div class="tables" id="klassement" data-tables data-lang={lang} data-classes={JSON.stringify(tableClasses)}>
+        <h3 data-edit="ui:table.title">{t(lang, 'table.title')}</h3>
+        <div data-tables-body set:html={tablesHtml(tables, lang)} />
       </div>
       <div class="live">
         <h3 data-edit="ui:live.title">{t(lang, 'live.title')}</h3>
@@ -68,9 +100,9 @@ const rtl = 'https://www.rtl.lu/sport/live-arena';
           <img src="/fotos/i5f62d347565d58ec.jpg" alt="RTL Sport · Live Arena" loading="lazy" />
           <span data-edit="ui:live.rtl">{t(lang, 'live.rtl')}</span>
         </a>
-        <a class="live-item" href={site.links.livestream} target="_blank" rel="noopener">
+        <a class={`live-item${live ? ' is-live' : ''}`} href={site.links.livestream} target="_blank" rel="noopener" data-live>
           <span class="live-dot" aria-hidden="true"></span>
-          <span data-edit="ui:live.flh">{t(lang, 'live.flh')}</span>
+          <span><b class="live-now">{live ? `${t(lang, 'live.now')}: ${live.home} – ${live.guest}` : ''}</b><span data-edit="ui:live.flh">{t(lang, 'live.flh')}</span></span>
         </a>
       </div>
     </div>
@@ -122,11 +154,6 @@ const rtl = 'https://www.rtl.lu/sport/live-arena';
           </div>
         </div>
       </div>
-      <div class="wisi">
-        <h3 data-edit="ui:wisi.title">{t(lang, 'wisi.title')}</h3>
-        <p data-edit="ui:wisi.text">{t(lang, 'wisi.text')}</p>
-        <a class="tag-btn" href={href(lang, '/wisi-cup/')}>{t(lang, 'wisi.title')}</a>
-      </div>
     </div>
   </section>
 
@@ -136,10 +163,12 @@ const rtl = 'https://www.rtl.lu/sport/live-arena';
         <h2 id="partner-title" data-edit="ui:partner.title">{t(lang, 'partner.title')}</h2>
         <p data-edit="ui:partner.lead">{t(lang, 'partner.lead')}</p>
       </div>
+      <h3 class="partner-group" data-edit="ui:partner.main">{t(lang, 'partner.main')}</h3>
       <ul class="patches is-main" data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
+      <h3 class="partner-group" data-edit="ui:partner.others">{t(lang, 'partner.others')}</h3>
       <ul class="patches" data-render="partners-rest" set:html={partnerPatches(partners, 'partner')} />
       <div class="partner-foot">
-        <a class="tag-btn" href={`mailto:${site.emails.president}`} data-edit="ui:partner.become">{t(lang, 'partner.become')}</a>
+        <a class="tag-btn" href={href(lang, '/kontakt/') + '#partner'} data-edit="ui:partner.become">{t(lang, 'partner.become')}</a>
         <a class="text-link" href={href(lang, '/partner/')}>{t(lang, 'partner.all')}</a>
       </div>
     </div>

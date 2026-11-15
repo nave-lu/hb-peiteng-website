@@ -25,7 +25,8 @@
   "name": "Nia Domo Real Estate Agency",
   "logo": "/fotos/ie1684ee492f710a1.jpg",
   "url": "https://www.niadomo.lu/",
-  "tier": "main"
+  "tier": "main",
+  "dark": true
  },
  {
   "id": "i9bc0d83a7904718a",
@@ -39,7 +40,8 @@
   "name": "Hotel Threeland",
   "logo": "/fotos/i5d9c7f41199ed8ac.png",
   "url": "https://www.hotelthreeland.lu/",
-  "tier": "main"
+  "tier": "main",
+  "dark": true
  },
  {
   "id": "i36bafdd3917d068a",

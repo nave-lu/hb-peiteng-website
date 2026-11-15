@@ -1,6 +1,6 @@
 {
  "path": "/shop/",
- "title": "SHOP",
+ "title": "Shop",
  "section": "club",
- "html": "<div class=\"product\"><img src=\"/fotos/i63b553764ce4111a.png\" alt=\"\" loading=\"lazy\"><div><h3>WISI-CUP T-Shirt</h3><p class=\"price\">0,00 € 15,00 € 0,00 € /</p></div></div><div class=\"product\"><img src=\"/fotos/i8106e2ec8ad9eead.jpg\" alt=\"\" loading=\"lazy\"><div><h3>&#x27;50 Joer HBP&#x27; Broschüre mit DVD und Blue-Ray Disk</h3><p class=\"price\">25,00 € 0,00 € /</p></div></div>"
+ "html": "<div class=\"product\"><img src=\"/fotos/i63b553764ce4111a.png\" alt=\"\" loading=\"lazy\"><div><h3>WISI-CUP T-Shirt</h3><p class=\"price\">15,00 €</p></div></div><div class=\"product\"><img src=\"/fotos/i8106e2ec8ad9eead.jpg\" alt=\"\" loading=\"lazy\"><div><h3>&#x27;50 Joer HBP&#x27; Broschüre mit DVD und Blue-Ray Disk</h3><p class=\"price\">25,00 €</p></div></div>"
 }

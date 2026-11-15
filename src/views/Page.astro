@@ -1,23 +1,83 @@
 ---
 import Base from '../layouts/Base.astro';
 import { t, href, type Lang } from '../i18n/ui';
-import { teams, news, sectionOf, sectionTree, type Page } from '../lib/content';
-import { newsList, shirtSvg } from '../lib/render';
+import { news, pages, sectionOf, sectionTree, teamsForPage, teamPageHtml, archiveYear, archiveRange, isArchive, childPages, type Page } from '../lib/content';
+import { wisiCupHtml } from '../lib/wisi';
+import site from '../data/site.json';
+import { partners } from '../lib/content';
+import { partnerPatches } from '../lib/render';
+import { newsList, teamPanel } from '../lib/render';
+import { teamMatches, teamLiveHtml, type LiveMode, type Match, type Table } from '../lib/matches';
+import flh from '../data/flh.json';
 
 interface Props { lang: Lang; page: Page; extra?: string }
 const { lang, page, extra } = Astro.props;
 const sec = sectionOf(page.path);
 const tree = sectionTree(page.path);
-const team = teams.find((x) => x.page === page.path);
+const { team, list: teamList } = teamsForPage(page.path);
 
-// Equipe-Seiten: Trainingszeiten kommen aus den Team-Daten (eine Quelle, im Admin pflegbar).
-let html = page.html;
-if (team) html = html.replace(/<table>(?:(?!<\/table>).)*?(Deeg|Wéini|Weini)(?:(?!<\/table>).)*?<\/table>/s, '');
+// Resultater und Klassement kommen live von der FLH (beim Bauen und bei jedem Besuch), nie mehr von Hand.
+const LIVE_PAGES: Record<string, [string, LiveMode]> = {
+  '/hären-i/resultater/': ['Hären 1', 'results'],
+  '/hären-i/resultater/klassement/': ['Hären 1', 'table'],
+  '/hären-i/resultater/coupe/': ['Hären 1', 'cup'],
+};
+const [liveTeam, liveMode] = LIVE_PAGES[page.path] ?? (team?.flh ? [team.flh, 'team' as LiveMode] : ['', 'team' as LiveMode]);
+let liveHtml = '';
+let liveList: Match[] = [];
+let tables: Table[] = [];
+if (liveTeam) {
+  liveList = teamMatches(flh.matches as Match[], liveTeam, liveMode);
+  const ids = new Set(liveList.map((m) => m.classId));
+  tables = liveMode === 'cup' ? [] : (flh.tables as Table[]).filter((x) => ids.has(x.classId));
+  if (liveList.length || tables.length) liveHtml = teamLiveHtml(liveList, tables, liveMode, lang, { results: t(lang, 'results.title'), table: t(lang, 'table.title') });
+  // Ohne Daten (z. B. FLH gerade nicht erreichbar): wenigstens der Weg zur ganzen Saison auf flh.lu
+  else liveHtml = `<h2>${t(lang, 'results.title')}</h2><p class="results-none"><a class="flh-link" href="https://www.flh.lu/championnat" target="_blank" rel="noopener">${t(lang, 'results.flh')}</a></p>`;
+}
 
-// Rubrik-Seiten der Neiegkeeten zeigen ihre Beiträge.
+// Mannschaftsseiten: Trainer und Trainingszeiten oben (aus den Team-Daten, im Admin pflegbar), Fotos ans Ende.
+// Die alten Resultat-Seiten von Hand (Jimdo) ersetzt die FLH ganz.
+// Rubrik-Seiten der Neiegkeeten zeigen ihre Beiträge, nach Jahren gruppiert (neue zuerst).
 const cat = page.path.match(/^\/noriichten-1\/([^/]+)\/$/)?.[1];
-const list = page.path === '/noriichten-1/' ? news.filter((n) => n.category !== 'archiv') : cat ? news.filter((n) => n.category === cat) : [];
-const parts = page.path.split('/').filter(Boolean);
+const list = page.path === '/noriichten-1/' ? news : cat ? news.filter((n) => n.category === cat) : [];
+const byYear = new Map<string, typeof list>();
+for (const n of list.filter((x) => !x.hidden)) {
+  const k = n.category === 'neu' || (n.path && !n.date && n.html) ? t(lang, 'news.latest') : n.date ? n.date.slice(0, 4) : n.year || t(lang, 'archive.label');
+  byYear.set(k, [...(byYear.get(k) ?? []), n]);
+}
+
+// Reihenfolge der Gruppen: Aktuell, dann Jahre absteigend, „Archiv“ (ohne Jahr) zuletzt
+const rank = (k: string) => (k === t(lang, 'news.latest') ? -1e4 : /^\d{4}$/.test(k) ? -Number(k) : 1e4);
+
+// Übersichten, die auf der alten Seite nur Knöpfe hatten (oder leer waren): Unterseiten als Kacheln
+const plainLen = page.html.replace(/<[^>]+>/g, '').trim().length;
+const isIndex = !team && !list.length && !liveTeam && plainLen < 80 && childPages(page.path).length > 0 && page.path !== '/wisi-cup/';
+const children = isIndex ? childPages(page.path) : [];
+const firstImg = (p: Page) => p.html.match(/<img src="([^"]+)"/)?.[1] ?? '';
+
+// Archiv: altes Datum groß sichtbar (ohne bekanntes Jahr: Hinweis „Archiv“ der alten Website)
+const year = archiveYear(page);
+// Übersichten tragen keinen eigenen Archiv-Hinweis; auf Seiten mit Live-Block (z. B. Coupe) steht er beim alten Teil
+const archived = isArchive(page) && !isIndex && !liveTeam;
+const badge = (y: string) => `<p class="archive-badge"><span>${t(lang, 'archive.label')}</span>${y ? `<b>${y}</b>` : ''}<em>${y ? t(lang, 'archive.text').replace('{y}', y) : t(lang, 'archive.old')}</em></p>`;
+
+// Sporthallen: OpenStreetMap-Karte unten auf der Seite (Übersicht zeigt alle Hallen des Clubs)
+const HALL_PAGES: Record<string, string[]> = {
+  '/club/sportshalen/bim-diederich/': ['bim-diederich'],
+  '/club/sportshalen/hal-rodange-1/': ['rodange'],
+};
+const hallMaps = (HALL_PAGES[page.path] ?? []).map((id) => site.halls.find((h) => h.id === id)!).filter(Boolean);
+const osmEmbed = (lat: number, lon: number) =>
+  `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.006}%2C${lat - 0.0028}%2C${lon + 0.006}%2C${lat + 0.0028}&layer=mapnik&marker=${lat}%2C${lon}`;
+
+let html = page.html;
+if (page.path === '/hären-i/resultater/' || page.path === '/hären-i/resultater/klassement/' || isIndex || cat || page.path === '/aner-equippen/') html = '';
+else if (team) html = teamPageHtml(page.html, t(lang, 'media.photos'));
+else if (liveTeam && isArchive(page) && page.html) html = `<h2 class="archive-title">${t(lang, 'archive.label')}</h2>${badge(archiveRange(page))}${page.html}`;
+else if (page.path === '/aner-equippen/jugend/') html = `<h2 class="photos-title">${t(lang, 'media.photos')} · ${t(lang, 'archive.label')}</h2>${page.html}`;
+else if (page.path === '/wisi-cup/' || page.path === '/wisi-cup/20-wisi-cup-2019/') html = wisiCupHtml(lang, page.path);
+// Partner-Seite: dieselbe Logo-Wand wie auf der Startseite (ganze Logos, verlinkt) statt der alten Bildergalerie
+else if (page.path === '/partner/') html = `<h2 class="partner-group">${t(lang, 'partner.main')}</h2><ul class="patches is-main">${partnerPatches(partners, 'main')}</ul><h2 class="partner-group">${t(lang, 'partner.others')}</h2><ul class="patches">${partnerPatches(partners, 'partner')}</ul>`;
 ---
 <Base lang={lang} title={page.title} path={page.path}>
   <div class="wrap">
@@ -27,6 +87,7 @@ const parts = page.path.split('/').filter(Boolean);
         {sec && <><span aria-hidden="true">/</span><a href={href(lang, sec.path)}>{t(lang, sec.key)}</a></>}
       </nav>
       <h1 data-edit={`title:${page.path}`}>{page.title}</h1>
+      {archived && <Fragment set:html={badge(year)} />}
       {team && <span class="page-nr" aria-hidden="true">{team.nr}</span>}
     </header>
     <div class="page-layout">
@@ -46,26 +107,38 @@ const parts = page.path.split('/').filter(Boolean);
       ) : <div />}
       <article class="prose">
         {lang !== 'lb' && page.html && <p class="lang-note">{t(lang, 'page.originalLang')}</p>}
-        {team && (
-          <div class="team-panel" data-render="team-panel" data-team-id={team.id}>
-            <div class="mini-shirt" aria-hidden="true">
-              <Fragment set:html={shirtSvg('mini-svg')} />
-              <span>{team.nr}</span>
-            </div>
-            <div>
-              <h2>{team.name[lang]}</h2>
-              {team.coach && <p><strong>{t(lang, 'teams.coach')}:</strong> {team.coach}</p>}
-              <ul class="shirt-times">
-                {team.training.map((r) => (
-                  <li><span class="day">{t(lang, `day.${r.day}` as any)}</span><span class="time">{r.time}</span><span class="hall">{r.hall}</span></li>
-                ))}
-              </ul>
-            </div>
-          </div>
+        {team && <Fragment set:html={teamPanel(team, lang)} />}
+        {liveTeam && <section class="team-live" data-team-live={liveTeam} data-mode={liveMode} data-lang={lang} data-h-results={t(lang, 'results.title')} data-h-table={t(lang, 'table.title')}><Fragment set:html={liveHtml} /><script type="application/json" data-flh-base set:html={JSON.stringify({ matches: liveList, tables }).replace(/</g, "\\u003c")} /></section>}
+        {teamList.length > 0 && <div class="team-list" set:html={teamList.map((x) => teamPanel(x, lang, true)).join('')} />}
+        {[...byYear].sort(([a], [b]) => rank(a) - rank(b)).map(([y, items]) => (
+          <section class="news-year"><h2 class="news-year-title">{y}</h2><div class="news-index" set:html={newsList(items, lang)} /></section>
+        ))}
+        {children.length > 0 && (
+          <ul class="child-grid">
+            {children.map((c) => (
+              <li class="news-card">
+                <div class="news-img">{firstImg(c) ? <img src={firstImg(c)} alt="" loading="lazy" /> : <span class="news-noimg" aria-hidden="true">HBP</span>}</div>
+                <h3><a href={href(lang, c.path)}>{c.title}</a></h3>
+                {archiveYear(c) && <span class="child-year">{archiveYear(c)}</span>}
+              </li>
+            ))}
+          </ul>
         )}
-        {list.length > 0 && <div class="news-index" data-render="news-index" data-cat={cat ?? ''} set:html={newsList(list, lang)} />}
         {extra && <div set:html={extra} />}
         <div data-edit-html={`page:${page.path}`} set:html={html} />
+        {hallMaps.map((h) => (
+          <section class="hall-map">
+            <h2>{h.name}</h2>
+            <p>{[h.street, h.city].filter(Boolean).join(', ')}</p>
+            <div class="map-frame">
+              <iframe src={osmEmbed(h.lat, h.lon)} title={`Kaart: ${h.name}`} loading="lazy" referrerpolicy="no-referrer"></iframe>
+            </div>
+            <p class="map-links">
+              <a href={h.map} target="_blank" rel="noopener">{t(lang, 'map.open')}</a>
+              <small>Kaart © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></small>
+            </p>
+          </section>
+        ))}
       </article>
     </div>
   </div>

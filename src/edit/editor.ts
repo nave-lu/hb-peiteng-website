@@ -5,7 +5,7 @@
  * Speichern geht über storage.ts (Demo: dieser Browser; Betrieb: api.php). */
 import './editor.css';
 import { storage, emptyState, preloadImages, type EditState } from './storage';
-import { teamsGrid, youthLabel, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
+import { teamsGrid, teamPanel, youthLabel, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
 import { UI, LANGS, href, type Lang } from '../i18n/ui';
 
 const lang = (document.body.dataset.lang || 'lb') as Lang;
@@ -59,12 +59,7 @@ function render() {
       el.innerHTML = newsList(n.filter((x) => (cat ? x.category === cat || (x.category === 'neu' && cat === 'hb-péiteng') : x.category !== 'archiv')), lang);
     } else if (kind === 'team-panel') {
       const team = t.find((x) => x.id === el.dataset.teamId);
-      if (team) {
-        const h2 = $('h2', el), times = $('.shirt-times', el), nr = $('.mini-shirt span', el);
-        if (h2) h2.textContent = team.name[lang] || team.name.lb;
-        if (nr) nr.textContent = team.nr;
-        if (times) times.innerHTML = team.training.map((r) => `<li><span class="day">${esc((UI[lang] as Record<string, string>)['day.' + r.day])}</span><span class="time">${esc(r.time)}</span><span class="hall">${esc(r.hall)}</span></li>`).join('');
-      }
+      if (team) el.outerHTML = teamPanel(team, lang, el.classList.contains('is-compact'));
     } else if (kind === 'news-draft') {
       const id = decodeURIComponent(location.hash.slice(1));
       const item = n.find((x) => x.id === id);

@@ -167,6 +167,14 @@ def wrap_text(s):
 
 def module(m):
     c = m.cls()
+    if "j-downloadDocument" in c:
+        a = m.find(lambda n: n.tag == "a" and "/app/download/" in n.attrs.get("href", ""))
+        if not a:
+            return ""
+        import urllib.parse
+        name = urllib.parse.unquote_plus(a.attrs["href"].split("/")[-1].split("?")[0])
+        label = name.rsplit(".", 1)[0].strip()
+        return f'<p class="download"><a class="btn" href="/dateien/{esc(urllib.parse.quote(name))}" download>Download: {esc(label)}</a></p>'
     if "j-spacing" in c or "j-facebook" in c or "j-formnew" in c or "j-form" in c:
         return ""
     if "j-hr" in c:
@@ -221,10 +229,15 @@ def module(m):
         return ('<div class="product">' + (f'<img src="{src}" alt="" loading="lazy">' if src else "")
                 + f'<div><h3>{esc(title.text().strip()) if title else ""}</h3>'
                 + (wrap_text(tidy(inline(desc))) if desc else "")
-                + (f'<p class="price">{esc(" ".join(price.text().split()))}</p>' if price else "") + "</div></div>")
+                + (f'<p class="price">{esc(prices(price.text()))}</p>' if price else "") + "</div></div>")
     if "j-googlemaps" in c or m.find(lambda n: n.tag == "iframe" and "google.com/maps" in n.attrs.get("src", "")):
         return ""
     return wrap_text(tidy(inline(m)))
+
+
+def prices(text):
+    """Jimdo listet 0,00 € für Varianten mit; nur echte Preise behalten."""
+    return " / ".join(p for p in re.findall(r"\d+,\d{2} €", text) if not p.startswith("0,00"))
 
 
 def nearest_col(n):
@@ -259,7 +272,11 @@ def clean_tables(s):
     """Leere Zeilen (z. B. nie ausgefüllte Spielpläne) entfernen; Tabellen ohne Inhalt fallen weg."""
     def table(m):
         rows = re.findall(r"<tr>.*?</tr>", m.group(0), re.S)
-        full = [r for r in rows if re.sub(r"<[^>]+>|&nbsp;|\s", "", r)]
+        # Zeilen ohne Inhalt; auch solche, in denen nur die Spieltag-Nummer steht
+        def filled(r):
+            cells = re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", r, re.S)
+            return any(re.sub(r"<[^>]+>|&nbsp;|\s", "", c) for c in cells[1:]) if len(cells) > 1 else bool(re.sub(r"<[^>]+>|&nbsp;|\s", "", r))
+        full = [r for r in rows if filled(r)]
         if len(full) <= 1:
             return ""
         return "<table>" + "".join(full) + "</table>"
@@ -274,7 +291,30 @@ def parents(n):
 
 
 # Titel, die auf der alten Seite falsch gesetzt waren
-TITLE_FIX = {"/events/": "Events"}
+TITLE_FIX = {"/events/": "Events", "/media/press/": "Press", "/noriichten-1/": "Neiegkeeten",
+             "/wisi-cup/20-wisi-cup-2019/fotoen/": "Réckbléck op den 20. Wisi-Cup 2019",
+             "/wisi-cup/20-wisi-cup-2019/info-deutsch/": "Praktische Informationen 2019",
+             "/wisi-cup/20-wisi-cup-2019/info-français/": "Informations pratiques 2019",
+             "/wisi-cup/einschreibung-inscription/": "Einschreibung / Inscription 2019",
+             "/noriichten-1/archiv/zuzo/": "Sedin Zuzo spillt Saison 2017/2018 beim HB Péiteng"}
+
+# Abkürzungen, die in Großbuchstaben bleiben
+KEEP_UPPER = {"HC", "HBC", "HB", "FLH", "AXA", "RTL", "LTMA", "TV", "U8", "U9", "U10", "U11", "U13", "U14", "U15", "U17", "U21", "I", "II", "PUB", "CS", "DVD"}
+
+
+def nice_title(t):
+    """GROSS geschriebene Wörter normal schreiben (Abkürzungen bleiben), Titel beginnt groß."""
+    def seg(x):
+        core = x.strip("'\"„“()[]:,.!?*")
+        if not core or any(ch.isdigit() for ch in core) or core.upper() in KEEP_UPPER:
+            return x.upper() if core.upper() in KEEP_UPPER else x
+        if core.isupper() and len(core) >= 2:
+            i = x.index(core)
+            return x[:i] + core[0] + core[1:].lower() + x[i + len(core):]
+        return x
+    out = " ".join("-".join(seg(p) for p in w.split("-")) for w in t.split())
+    return out[:1].upper() + out[1:]
+
 
 SECTIONS = {"hären-i": "equippen", "aner-equippen": "equippen", "club": "club", "partner": "club",
             "shop": "club", "kontakt": "club", "noriichten-1": "noriichten", "wisi-cup": "wisi-cup",
@@ -291,7 +331,7 @@ def main():
         raw = (base / p["datei"]).read_text()
         title = re.sub(r"\s*-\s*HB Péiteng\s*$", "", p["titel"]).strip(" *")
         path = p["pfad"]
-        title = TITLE_FIX.get(path, title)
+        title = TITLE_FIX.get(path, nice_title(title))
         top = path.strip("/").split("/")[0]
         slug = path.strip("/").replace("/", "__") or "index"
         data = {"path": path, "title": title, "section": SECTIONS.get(top, "club"), "html": convert(raw)}

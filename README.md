@@ -32,6 +32,14 @@ Adressen: Lëtzebuergesch behält die alten Adressen (`/hären-i/kader/`), Franz
 
 Das Skript `scrape.py` holt die alte Seite neu, falls dort noch etwas geändert wurde. Danach `npm run import`.
 
+## Matcher, Resultater, Klassement (automatisch von der FLH)
+
+Die Daten kommen von Handball4all, derselben Quelle wie flh.lu.
+
+- **Lizenz:** Handball4all erlaubt den automatischen Massenabruf nur mit Lizenz. Ohne Lizenz lädt nur der Browser jedes Besuchers die laufende und die letzte Woche plus die Klassementer (höchstens alle 5 Minuten, während eines Matches alle 2 Minuten). Die ganze Saison auf den Resultat-Seiten braucht die Lizenz.
+- `FLH_LICENSE=1 npm run sync` holt mit Lizenz die ganze Saison und die Klassementer nach `src/data/flh.json` (eine Anfrage nach der anderen, mit Pause). Ohne die Variable macht das Skript nichts. Die Sperre nie umgehen.
+- Zuordnung FLH → Equipe: Feld `flh` in `src/data/teams.json` (z. B. „Hären“, „U13 Mixte“). Der Live-Punkt leuchtet nur, wenn ein Match der Hären oder Dammen gerade läuft (FLH-Live-Status oder Spielzeit).
+
 ## Admin (wie Rondpoint/Krombach)
 
 „Login“ ganz unten im Footer öffnet die Anmeldung. Danach:
