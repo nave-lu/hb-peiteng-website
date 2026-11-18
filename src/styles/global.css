@@ -416,6 +416,8 @@ svg .collar { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: r
 .shorts-base nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .shorts-base a { color: rgb(255 255 255 / 0.7); text-decoration: none; }
 .shorts-base a:hover { color: var(--white); text-decoration: underline; }
+.made-by { display: inline-flex; align-items: center; gap: 6px; }
+.made-by img { width: 18px; height: 18px; border-radius: 4px; }
 
 /* ---------- Innenseiten: Inhalt direkt auf dem Stoff, ohne Kasten ---------- */
 .page-head { padding-block: clamp(40px, 6vw, 80px) clamp(24px, 3vw, 40px); position: relative; }

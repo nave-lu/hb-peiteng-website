@@ -43,6 +43,18 @@ function setMenu(open: boolean) {
   }
 }
 menuBtn?.addEventListener('click', () => setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'));
+// Sprache im offenen Menü wechseln: gleiche Seite in der neuen Sprache, Menü bleibt offen (ohne neue Animation)
+menu?.querySelectorAll('[data-keep-menu]').forEach((a) => a.addEventListener('click', () => {
+  try { sessionStorage.setItem('menu-open', '1'); } catch { /* egal */ }
+}));
+try {
+  if (sessionStorage.getItem('menu-open')) {
+    sessionStorage.removeItem('menu-open');
+    menu?.classList.add('is-instant');
+    setMenu(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => menu?.classList.remove('is-instant')));
+  }
+} catch { /* egal */ }
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && menu?.hasAttribute('data-open')) { setMenu(false); menuBtn?.focus(); }
 });
