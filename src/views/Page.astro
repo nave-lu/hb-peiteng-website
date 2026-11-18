@@ -6,7 +6,7 @@ import { wisiCupHtml } from '../lib/wisi';
 import site from '../data/site.json';
 import { partners } from '../lib/content';
 import { partnerPatches } from '../lib/render';
-import { newsList, teamPanel } from '../lib/render';
+import { newsList, teamPanel, teamCards } from '../lib/render';
 import { teamMatches, teamLiveHtml, type LiveMode, type Match, type Table } from '../lib/matches';
 import flh from '../data/flh.json';
 
@@ -55,7 +55,7 @@ const rank = (k: string) => (k === t(lang, 'news.latest') ? -1e4 : /^\d{4}$/.tes
 
 // Übersichten, die auf der alten Seite nur Knöpfe hatten (oder leer waren): Unterseiten als Kacheln
 const plainLen = page.html.replace(/<[^>]+>/g, '').trim().length;
-const isIndex = !team && !list.length && !liveTeam && plainLen < 80 && childPages(page.path).length > 0 && page.path !== '/wisi-cup/';
+const isIndex = !team && !list.length && !teamList.length && !liveTeam && plainLen < 80 && childPages(page.path).length > 0 && page.path !== '/wisi-cup/';
 const children = isIndex ? childPages(page.path) : [];
 const firstImg = (p: Page) => p.html.match(/<img src="([^"]+)"/)?.[1] ?? '';
 
@@ -95,7 +95,8 @@ else if (page.path === '/partner/') html = `<h2 class="partner-group">${t(lang, 
       {team && <span class="page-nr" aria-hidden="true">{team.nr}</span>}
     </header>
     <div class="page-layout">
-      {tree.length > 1 ? (
+      {/* Übersichten mit Mannschafts-Karten brauchen die Liste links nicht nochmal */}
+      {tree.length > 1 && !teamList.length ? (
         <aside class="subnav">
           <details open>
             <summary>{sec ? t(lang, sec.key) : t(lang, 'page.section')}</summary>
@@ -113,7 +114,7 @@ else if (page.path === '/partner/') html = `<h2 class="partner-group">${t(lang, 
         {lang !== 'lb' && page.html && <p class="lang-note">{t(lang, 'page.originalLang')}</p>}
         {team && <Fragment set:html={teamPanel(team, lang)} />}
         {liveTeam && <section class="team-live" data-team-live={liveTeam} data-mode={liveMode} data-lang={lang} data-h-results={t(lang, 'results.title')} data-h-table={t(lang, 'table.title')}><Fragment set:html={liveHtml} /><script type="application/json" data-flh-base set:html={JSON.stringify({ matches: liveList, tables }).replace(/</g, "\\u003c")} /></section>}
-        {teamList.length > 0 && <div class="team-list" set:html={teamList.map((x) => teamPanel(x, lang, true)).join('')} />}
+        {teamList.length > 0 && <div set:html={teamCards(teamList, lang)} />}
         {[...byYear].sort(([a], [b]) => rank(a) - rank(b)).map(([y, items]) => (
           <section class="news-year"><h2 class="news-year-title">{y}</h2><div class="news-index" set:html={newsList(items, lang)} /></section>
         ))}

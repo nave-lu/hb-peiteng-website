@@ -77,6 +77,17 @@ export function teamPanel(t: Team, lang: Lang, compact = false): string {
 </div>`;
 }
 
+/** Übersicht zum Auswählen (Seite „Equippen“): pro Mannschaft eine Karte mit Trikot, Name und Liga, ganz anklickbar. */
+export function teamCards(teams: Team[], lang: Lang): string {
+  const vis = teams.filter((t) => !t.hidden && t.page);
+  const card = (t: Team) => `<li><a href="${e(href(lang, t.page))}"><span class="mini-shirt" aria-hidden="true">${shirtSvg('mini-svg')}<span>${e(t.nr)}</span></span><span class="tc-name">${e(t.name[lang] || t.name.lb)}</span>${t.league || t.years ? `<span class="tc-meta">${e((t.league || t.years).split(' · ')[0])}</span>` : ''}</a></li>`;
+  return (['seniors', 'youth'] as const)
+    .filter((g) => vis.some((t) => t.group === g))
+    // Jugend von der ältesten zur jüngsten Mannschaft (U21 … U9)
+    .map((g) => `<h2 class="tc-group">${e(tr(lang, 'teams.' + g))}</h2><ul class="team-cards">${vis.filter((t) => t.group === g).sort((a, b) => (g === 'youth' ? Number(b.nr) - Number(a.nr) : 0)).map(card).join('')}</ul>`)
+    .join('');
+}
+
 export function teamsGrid(teams: Team[], lang: Lang): string {
   const vis = teams.filter((t) => !t.hidden);
   const group = (g: Team['group']) => vis.filter((t) => t.group === g);

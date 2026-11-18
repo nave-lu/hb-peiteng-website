@@ -26,6 +26,7 @@ function setMenu(open: boolean) {
   menuBtn.setAttribute('aria-expanded', String(open));
   menuBtn.setAttribute('aria-label', (open ? menuBtn.dataset.closeLabel : menuBtn.dataset.openLabel) ?? '');
   clearTimeout(closing);
+  if (!open) document.documentElement.classList.remove('menu-restored'); // ab jetzt wieder mit Animation
   const finish = () => {
     clearTimeout(closing);
     menu.classList.remove('is-closing');
@@ -48,12 +49,8 @@ menu?.querySelectorAll('[data-keep-menu]').forEach((a) => a.addEventListener('cl
   try { sessionStorage.setItem('menu-open', '1'); } catch { /* egal */ }
 }));
 try {
-  if (sessionStorage.getItem('menu-open')) {
-    sessionStorage.removeItem('menu-open');
-    menu?.classList.add('is-instant');
-    setMenu(true);
-    requestAnimationFrame(() => requestAnimationFrame(() => menu?.classList.remove('is-instant')));
-  }
+  // das Inline-Skript in Base.astro hat das Menü schon geöffnet; hier nur Beschriftung und aktive Rubrik nachziehen
+  if (sessionStorage.getItem('menu-open')) { sessionStorage.removeItem('menu-open'); setMenu(true); }
 } catch { /* egal */ }
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && menu?.hasAttribute('data-open')) { setMenu(false); menuBtn?.focus(); }
@@ -271,6 +268,8 @@ const show = () => {
   let img = lb!.querySelector('img');
   if (!img) { img = document.createElement('img'); img.alt = ''; lb!.prepend(img); }
   img.src = list[idx];
+  // ein einzelnes Foto: keine Pfeile
+  lb!.querySelectorAll<HTMLElement>('.lb-prev, .lb-next').forEach((b) => { b.hidden = list.length < 2; });
 };
 /* Groß ansehen: Fotos in Galerien und alle einzelnen Fotos im Seiteninhalt (z. B. Team-Fotos unten),
  * aber keine Fotos, die selbst ein Link sind (Partner-Logos, Werbebanner). */
@@ -302,6 +301,16 @@ lb?.addEventListener('keydown', (ev) => {
   if (ev.key === 'ArrowRight') lb.querySelector<HTMLButtonElement>('.lb-next')!.click();
 });
 lb?.addEventListener('click', (ev) => { if (ev.target === lb) lb.close(); });
+// Handy: wischen links/rechts blättert, nach unten wischen schließt
+let touch: { x: number; y: number } | null = null;
+lb?.addEventListener('touchstart', (ev) => { touch = { x: ev.touches[0].clientX, y: ev.touches[0].clientY }; }, { passive: true });
+lb?.addEventListener('touchend', (ev) => {
+  if (!touch) return;
+  const dx = ev.changedTouches[0].clientX - touch.x, dy = ev.changedTouches[0].clientY - touch.y;
+  touch = null;
+  if (dy > 90 && Math.abs(dy) > Math.abs(dx)) lb.close();
+  else if (Math.abs(dx) > 60 && list.length > 1) lb.querySelector<HTMLButtonElement>(dx < 0 ? '.lb-next' : '.lb-prev')!.click();
+});
 
 /* ---------- Sprungmarken: Ziel sofort fertig zeigen und genau oben halten ---------- */
 // Spiele, Fotos und Schriften laden nach dem Sprung noch nach und verschieben die Seite;

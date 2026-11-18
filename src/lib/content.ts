@@ -22,7 +22,7 @@ export const partners = partnersData as Partner[];
 
 /** Hauptnavigation: Rubrik → Startseite der Rubrik + alle Seiten darunter. */
 export const NAV: { key: Key; path: string; prefixes: string[] }[] = [
-  { key: 'nav.teams', path: '/hären-i/', prefixes: ['/hären-i/', '/aner-equippen/'] },
+  { key: 'nav.teams', path: '/aner-equippen/', prefixes: ['/hären-i/', '/aner-equippen/'] },
   { key: 'nav.news', path: '/noriichten-1/', prefixes: ['/noriichten-1/'] },
   { key: 'nav.club', path: '/club/', prefixes: ['/club/', '/partner/', '/shop/', '/kontakt/'] },
   { key: 'nav.wisicup', path: '/wisi-cup/', prefixes: ['/wisi-cup/'] },
@@ -50,7 +50,7 @@ export function sectionTree(path: string) {
 /** Menü: pro Rubrik nur die Haupt- und direkten Unterseiten (Tiefe 0–1). */
 export function menuLinks(n: (typeof NAV)[number], lang: Lang) {
   // Equippen: nur die Mannschaften selbst (Hären I führt auf seine Hauptseite, nicht auf die Trainingszeiten)
-  if (n.key === 'nav.teams') return teams.filter((x) => !x.hidden && x.page).map((x) => ({ path: x.page.replace(/trainingszäiten\/$/, ''), title: x.name[lang] || x.name.lb, depth: 0 }));
+  if (n.key === 'nav.teams') return teams.filter((x) => !x.hidden && x.page).map((x) => ({ path: x.page, title: x.name[lang] || x.name.lb, depth: 0 }));
   return sectionTree(n.path).filter((p) => p.depth <= 1);
 }
 
@@ -105,14 +105,15 @@ export const plainText = plain;
 export const pageExcerpt = excerpt;
 
 /** Welche Mannschaft(en) gehören zu einer Seite? Eigene Seite → eine; Übersichten → mehrere. */
-const EXTRA_TEAM_PAGES: Record<string, string> = { '/hären-i/': 'haeren-1', '/hären-i/kader/': 'haeren-1' };
+const EXTRA_TEAM_PAGES: Record<string, string> = { '/hären-i/kader/': 'haeren-1', '/hären-i/trainingszäiten/': 'haeren-1' };
 export function teamsForPage(path: string): { team?: Team; list: Team[] } {
   const vis = teams.filter((t) => !t.hidden);
   const id = EXTRA_TEAM_PAGES[path];
   const team = vis.find((t) => t.page === path || t.id === id);
   if (team) return { team, list: [] };
   if (path === '/aner-equippen/jugend/') return { list: vis.filter((t) => t.group === 'youth') };
-  if (path === '/aner-equippen/') return { list: vis.filter((t) => t.id !== 'haeren-1') };
+  // Übersicht aller Mannschaften (Menüpunkt „Equippen“): alle zum Auswählen
+  if (path === '/aner-equippen/') return { list: vis };
   return { list: [] };
 }
 

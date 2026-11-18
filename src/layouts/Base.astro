@@ -89,6 +89,18 @@ const joinPath = '/club/gëff-handballspiller-inn/';
       </div>
     </div>
 
+    {/* Sprachwechsel aus dem offenen Menü: Menü schon beim Laden offen zeigen (vor dem ersten Bild, keine Animation) */}
+    <script is:inline>
+      try {
+        if (sessionStorage.getItem('menu-open')) {
+          document.documentElement.classList.add('menu-restored');
+          document.documentElement.style.overflow = 'hidden';
+          document.getElementById('menu').setAttribute('data-open', '');
+          document.querySelector('.menu-btn').setAttribute('aria-expanded', 'true');
+        }
+      } catch (e) {}
+    </script>
+
     <main id="inhalt">
       <slot />
     </main>
@@ -135,7 +147,7 @@ const joinPath = '/club/gëff-handballspiller-inn/';
             <a href={href(lang, '/dateschutz/')}>{t(lang, 'footer.privacy')}</a>
             <a href="#login" data-login>{t(lang, 'footer.login')}</a>
           </nav>
-          <a class="made-by" href="https://nave.lu" target="_blank" rel="noopener">Created by <img src="/brand/nave-n.png" alt="" width="18" height="18" loading="lazy" /> Nave</a>
+          <a class="made-by" href="https://nave.lu" target="_blank" rel="noopener">Created by <img src="/brand/nave-n.png" alt="" width="15" height="18" loading="lazy" /><img class="made-by-word" src="/brand/nave-wordmark.png" alt="Nave" width="43" height="14" loading="lazy" /></a>
         </div>
       </div>
     </footer>
