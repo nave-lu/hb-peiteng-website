@@ -1,6 +1,6 @@
 // Prüft die Pfad-Umstellung für GitHub Pages (scripts/pages-base.mjs).
 import assert from 'node:assert/strict';
-import { rebase, icloudOriginal } from '../scripts/pages-base.mjs';
+import { rebase, rebaseJs, icloudOriginal } from '../scripts/pages-base.mjs';
 const b = '/hbp';
 assert.equal(rebase('<a href="/club/">', b), '<a href="/hbp/club/">');
 assert.equal(rebase('<img src="/fotos/a.jpg">', b), '<img src="/hbp/fotos/a.jpg">');
@@ -14,4 +14,5 @@ assert.equal(icloudOriginal('dist/noriichten-1/index 3.html'), 'dist/noriichten-
 assert.equal(icloudOriginal('dist/fotos/i0104 2.jpg'), 'dist/fotos/i0104.jpg');
 assert.equal(icloudOriginal('dist/dateien/Fiche 2025-2026.jpg'), null);
 assert.equal(icloudOriginal('dist/dateien/Anmeldeformular 20. WISI 2019.pdf'), 'dist/dateien/Anmeldeformular 20. WISI.pdf'); // existiert nicht -> bleibt
+assert.equal(rebaseJs('_=function(e){return`/`+e},x', '/hbp'), '_=function(e){return`/hbp/`+e},x');
 console.log('ok');

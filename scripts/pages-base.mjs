@@ -10,8 +10,8 @@ import { join } from 'node:path';
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 
-import { rebase } from '../src/lib/rebase.mjs';
-export { rebase };
+import { rebase, rebaseJs } from '../src/lib/rebase.mjs';
+export { rebase, rebaseJs };
 
 /** „index 3.html“ → „index.html“, sonst null */
 export const icloudOriginal = (path) => {
@@ -29,9 +29,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   let n = 0;
   if (base) {
     for (const f of walk('dist')) {
-      if (!/\.(html|css)$/.test(f)) continue;
+      if (!/\.(html|css|js)$/.test(f)) continue;
       const s = readFileSync(f, 'utf8');
-      const out = rebase(s, base);
+      const out = f.endsWith('.js') ? rebaseJs(s, base) : rebase(s, base);
       if (out !== s) { writeFileSync(f, out); n++; }
     }
   }
