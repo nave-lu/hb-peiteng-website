@@ -69,7 +69,7 @@ npm run deploy
 
 Baut die Seite und lädt sie in den Branch `gh-pages`; GitHub Pages liefert sie aus.
 
-- **Jetzt (Vorschau):** https://xjamie007.github.io/hb-peiteng-website/ – dafür stellt `scripts/pages-base.mjs` alle Pfade auf `/hb-peiteng-website/` um.
+- **Jetzt (Vorschau):** https://nave-lu.github.io/hb-peiteng-website/ – dafür stellt `scripts/pages-base.mjs` alle Pfade auf `/hb-peiteng-website/` um.
 - **Mit eigener Domain (www.hbpeiteng.com):** genau wie bei www.blackstar-mersch.lu – Domain bei my.lu, Website weiter auf GitHub Pages.
 
 ### Umzug auf www.hbpeiteng.com (Reihenfolge einhalten)
@@ -80,7 +80,7 @@ Heute liegt `hbpeiteng.com` bei Jimdo (Registrar InterNetX, Nameserver `ns13/ns1
 2. Domain von Jimdo zu my.lu transferieren (Auth-Code bei Jimdo anfordern).
 3. DNS bei my.lu – wie bei Blackstar:
    - `hbpeiteng.com` A → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - `www.hbpeiteng.com` CNAME → `xjamie007.github.io.`
+   - `www.hbpeiteng.com` CNAME → `nave-lu.github.io.`
    - MX auf das neue Postfach (my.lu/mbox.lu)
 4. Wenn die DNS-Einträge aktiv sind: `echo www.hbpeiteng.com > public/CNAME`, committen, `npm run deploy`, danach in GitHub → Settings → Pages „Enforce HTTPS“ anhaken.
    Mit `public/CNAME` entfällt die Pfad-Umstellung automatisch, die Seite läuft im Wurzelverzeichnis.
