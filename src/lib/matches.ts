@@ -71,7 +71,7 @@ export async function fetchSeason(pauseMs = 600): Promise<Match[]> {
   return dedupe(all);
 }
 
-/** Am selben Tag nach Alter, älteste zuerst: Hären 1, Dammen, Hären 2, Dammen II, dann U21 … U9. */
+/** Nach Datum und Uhrzeit; nur bei gleicher Anstoßzeit nach Alter, älteste zuerst: Hären 1, Dammen, Hären 2, Dammen II, dann U21 … U9. */
 const TEAM_ORDER = ['Hären 1', 'Dammen', 'Hären 2', 'Dammen II'];
 export const teamRank = (team: string) => {
   const i = TEAM_ORDER.indexOf(team);
@@ -83,7 +83,7 @@ const dedupe = (list: Match[]) => {
   const seen = new Set<string>();
   return list
     .filter((m) => !seen.has(m.id) && seen.add(m.id))
-    .sort((a, b) => a.date.localeCompare(b.date) || teamRank(a.team) - teamRank(b.team) || a.time.localeCompare(b.time));
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time || '99').localeCompare(b.time || '99') || teamRank(a.team) - teamRank(b.team));
 };
 
 /** Laufende Woche im Browser: frische Resultate und Live-Status in den Schnappschuss einarbeiten. */

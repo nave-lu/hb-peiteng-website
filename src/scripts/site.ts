@@ -90,8 +90,8 @@ document.addEventListener('keydown', (ev) => {
 });
 
 /* ---------- Karussells (Matcher, Neiegkeeten): Wischen nativ, Pfeile, Punkte, Autoplay ---------- */
-/** Karussell einrichten. Darf nach neuem Inhalt (Live-Matcher) erneut aufgerufen werden:
- *  Klicks werden nur einmal angehängt, danach nur Pfeile/Punkte und Startposition neu. */
+/** Karussell einrichten: blättert nur, wenn man selbst drückt (kein Autoplay, kein Zurückspringen).
+ *  Darf nach neuem Inhalt (Live-Matcher) erneut aufgerufen werden: Klicks werden nur einmal angehängt. */
 function setupCarousel(root: HTMLElement) {
   const track = root.querySelector<HTMLElement>('.carousel-track');
   if (!track) return;
@@ -99,14 +99,14 @@ function setupCarousel(root: HTMLElement) {
   root.dataset.ready = '1';
   const items = () => [...track.children] as HTMLElement[];
   const step = () => (items()[0]?.getBoundingClientRect().width ?? track.clientWidth) + (parseFloat(getComputedStyle(track).columnGap) || 0);
-  // Nur die Slideshow (Autoplay) springt am Ende zurück an den Anfang; sonst bleibt „weiter“ immer rechts
-  const loop = root.hasAttribute('data-autoplay');
   const max = () => track.scrollWidth - track.clientWidth - 2;
   const btns = [...root.querySelectorAll<HTMLButtonElement>('.car-btn')];
   const dots = root.querySelector('.dots');
   const paint = () => {
     // am Anfang/Ende den jeweiligen Pfeil ausgrauen
-    if (!loop) btns.forEach((b) => { b.disabled = +b.dataset.dir! < 0 ? track.scrollLeft <= 2 : track.scrollLeft >= max(); });
+    const last = [...track.children].filter((x) => !x.classList.contains('match-spacer')).pop();
+    const lastShown = !!last && last.getBoundingClientRect().right <= track.getBoundingClientRect().right + 2;
+    btns.forEach((b) => { b.disabled = +b.dataset.dir! < 0 ? track.scrollLeft <= 2 : track.scrollLeft >= max() || lastShown; });
     if (!dots) return;
     const n = items().length;
     const i = Math.round(track.scrollLeft / Math.max(1, step()));
@@ -114,30 +114,27 @@ function setupCarousel(root: HTMLElement) {
     [...dots.children].forEach((d, k) => d.classList.toggle('on', k === Math.min(i, n - 1)));
   };
   if (first) {
-    const go = (dir: number) => {
-      const at = track.scrollLeft;
-      const next = loop && dir > 0 && at >= max() ? 0 : loop && dir < 0 && at <= 2 ? max() : Math.min(max() + 2, Math.max(0, at + dir * step()));
+    btns.forEach((b) => b.addEventListener('click', () => {
+      root.dataset.moved = '1';
+      const next = Math.min(max() + 2, Math.max(0, track.scrollLeft + +b.dataset.dir! * step()));
       track.scrollTo({ left: next, behavior: reduced ? 'auto' : 'smooth' });
-    };
-    let timer = 0;
-    let stopped = false;
-    const pause = () => { clearInterval(timer); timer = 0; };
-    const stop = () => { stopped = true; pause(); };
-    btns.forEach((b) => b.addEventListener('click', () => { go(+b.dataset.dir!); stop(); }));
+    }));
     track.addEventListener('scroll', () => requestAnimationFrame(paint), { passive: true });
     // sobald jemand selbst blättert, springt eine Aktualisierung nicht mehr zurück
     ['pointerdown', 'wheel', 'keydown'].forEach((e) => root.addEventListener(e, () => { root.dataset.moved = '1'; }, { passive: true }));
-    if (loop && !reduced) {
-      // erst weiterblättern, wenn man die Slideshow wirklich sieht; außer Sicht wieder anhalten
-      const play = () => { if (!timer && !stopped) timer = window.setInterval(() => { if (!document.hidden && !editing()) go(1); }, 6000); };
-      new IntersectionObserver(([en]) => (en.intersectionRatio >= 0.6 ? play() : pause()), { threshold: [0, 0.6] }).observe(root);
-      ['pointerdown', 'focusin', 'mouseenter'].forEach((e) => root.addEventListener(e, stop, { once: true }));
-    }
   }
-  // Matcher: zum ersten Match ab heute springen (Resultater vun der leschter Woch stinn virdrun)
+  // Matcher: das nächste Spiel steht immer als erste Karte (gespielte liegen links davon, per Pfeil erreichbar).
+  // Gibt es danach zu wenige Spiele, kommen hinten leere Plätze dazu, damit es trotzdem ganz links stehen kann
+  // (Padding geht nicht: die Spaltenbreite hängt an der Breite der Reihe).
   if (track.matches('.matches') && !root.dataset.moved) {
-    const firstUpcoming = items().findIndex((x) => !x.classList.contains('is-played') && !x.classList.contains('is-past'));
-    track.scrollLeft = firstUpcoming > 0 ? items()[firstUpcoming].offsetLeft - track.offsetLeft - 4 : 0;
+    track.querySelectorAll('.match-spacer').forEach((x) => x.remove());
+    const next = items().find((x) => x.matches('.match:not(.is-played):not(.is-past)'));
+    if (next) {
+      const target = track.scrollLeft + next.getBoundingClientRect().left - track.getBoundingClientRect().left;
+      const missing = target + track.clientWidth - track.scrollWidth;
+      for (let k = 0; k < Math.ceil(missing / step()); k++) track.insertAdjacentHTML('beforeend', '<span class="match-spacer" aria-hidden="true"></span>');
+      track.scrollLeft = target;
+    } else track.scrollLeft = max() + 2; // nur Resultate: die neuesten zeigen
   }
   paint();
 }
