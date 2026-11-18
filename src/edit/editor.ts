@@ -10,7 +10,8 @@ import { storage, emptyState, normalize, preloadImages, type EditState, type Own
 import { teamsGrid, teamPanel, trainingCards, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
 import { MAIN_TABLE_TEAMS, type Match } from '../lib/matches';
 import { rebase } from '../lib/rebase.mjs';
-import { UI, LANGS, href, type Lang } from '../i18n/ui';
+import { A, adminLang, setAdminLang, DAY_NAMES } from './admin-i18n';
+import { LANGS, href, type Lang } from '../i18n/ui';
 
 const lang = (document.body.dataset.lang || 'lb') as Lang;
 const path = document.body.dataset.path || '/';
@@ -79,11 +80,11 @@ const getPath = (o: unknown, path: string): unknown => path.split('.').reduce<un
 function siteFields(): [string, [string, string][]][] {
   const s = base.site as { halls?: { name: string }[]; address?: string[]; bank?: string[] };
   return [
-    ['Club', [['fullName', 'Numm vum Club'], ...(s.address ?? []).map((_, i): [string, string] => [`address.${i}`, `Adress, Zeil ${i + 1}`])]],
-    ['E-Mailen', [['emails.club', 'Sekretariat'], ['emails.president', 'President'], ['emails.wisiCup', 'Wisi-Cup']]],
-    ['Links', [['links.livestream', 'Livestream'], ['links.flhKlassement', 'FLH-Klassement'], ['links.refill', 'Shop'], ['links.facebook', 'Facebook']]],
-    ...(s.halls ?? []).map((h, i): [string, [string, string][]] => [`Hal: ${h.name}`, [[`halls.${i}.name`, 'Numm'], [`halls.${i}.street`, 'Strooss'], [`halls.${i}.city`, 'Uertschaft'], [`halls.${i}.map`, 'Google-Maps-Link'], [`halls.${i}.lat`, 'Kaart: Breedegrad'], [`halls.${i}.lon`, 'Kaart: Längegrad']]]),
-    ['Bank', (s.bank ?? []).map((_, i): [string, string] => [`bank.${i}`, `Kont ${i + 1}`])],
+    [A('club.club'), [['fullName', A('club.name')], ...(s.address ?? []).map((_, i): [string, string] => [`address.${i}`, A('club.address', { n: i + 1 })])]],
+    [A('club.emails'), [['emails.club', A('club.secretary')], ['emails.president', A('club.president')], ['emails.wisiCup', A('club.wisi')]]],
+    [A('club.links'), [['links.livestream', A('club.livestream')], ['links.flhKlassement', A('club.flh')], ['links.refill', A('club.shop')], ['links.facebook', A('club.facebook')]]],
+    ...(s.halls ?? []).map((h, i): [string, [string, string][]] => [A('club.hall', { n: h.name }), [[`halls.${i}.name`, A('club.hallName')], [`halls.${i}.street`, A('club.street')], [`halls.${i}.city`, A('club.town')], [`halls.${i}.map`, A('club.map')], [`halls.${i}.lat`, A('club.lat')], [`halls.${i}.lon`, A('club.lon')]]]),
+    [A('club.bank'), (s.bank ?? []).map((_, i): [string, string] => [`bank.${i}`, A('club.account', { n: i + 1 })])],
   ];
 }
 function sitePairs(): [string, string][] {
@@ -127,7 +128,7 @@ function render() {
       const item = n.find((x) => x.id === id);
       el.innerHTML = item
         ? fix(`${item.image ? `<figure><img src="${esc(storage.imageUrl(item.image))}" alt=""></figure>` : ''}<h2>${esc(item.title)}</h2>${item.date ? `<p><time>${esc(item.date)}</time></p>` : ''}${showUrls(item.html || `<p>${esc(item.excerpt)}</p>`)}`)
-        : '<p>Dëse Beitrag gëtt et net (méi).</p>';
+        : `<p>${esc(A('post.missing'))}</p>`;
     }
   }
   // Klassement-Ligen (FLH-Liga-Nummer der Equippen) und eigene Matcher an die Spiele-Anzeige melden
@@ -283,16 +284,16 @@ async function shrink(file: File, max = 2000): Promise<Blob> {
 async function uploadPhoto(): Promise<string | null> {
   const f = await chooseFile();
   if (!f) return null;
-  toast('Foto gëtt gelueden …');
+  toast(A('photo.loading'));
   const path = await storage.uploadImage(await shrink(f), f.name);
-  toast('Foto ersat. Net vergiessen ze späicheren.');
+  toast(A('photo.replaced'));
   return path;
 }
 async function pickPhoto(img: HTMLImageElement) {
   const action = await menu(img, [
-    ['new', 'Anert Foto wielen'],
-    ['hide', img.hidden ? 'Erëm weisen' : 'Foto verstoppen'],
-    ['orig', 'Original-Foto'],
+    ['new', A('photo.new')],
+    ['hide', img.hidden ? A('photo.show') : A('photo.hide')],
+    ['orig', A('photo.orig')],
   ]);
   const inHtml = img.closest<HTMLElement>('[data-edit-html]');
   if (action === 'new') {
@@ -325,17 +326,17 @@ async function pickPhoto(img: HTMLImageElement) {
 /* Link ändern: neue Adresse für diesen Link (gilt für alle Links mit derselben Original-Adresse) */
 async function pickLink(a: HTMLAnchorElement) {
   const orig = a.dataset.origHref!;
-  const action = await menu(a, [['edit', 'Link änneren'], ['orig', 'Original-Link'], ['open', 'Link opmaachen']]);
+  const action = await menu(a, [['edit', A('link.edit')], ['orig', A('link.orig')], ['open', A('link.open')]]);
   if (action === 'open') return void window.open(a.href, '_blank', 'noopener');
   if (action === 'edit') {
-    const v = prompt('Neien Link (z. B. https://… , mailto:… oder /club/):', a.getAttribute('href') ?? '');
+    const v = prompt(A('link.prompt'), a.getAttribute('href') ?? '');
     if (v === null) return;
     beforeChange();
     if (!v.trim() || v.trim() === orig) delete state.links[orig]; else state.links[orig] = v.trim();
   } else if (action === 'orig') { beforeChange(); delete state.links[orig]; } else return;
   apply();
   changed(false);
-  toast('Link geännert. Net vergiessen ze späicheren.');
+  toast(A('link.changed'));
 }
 
 /* Kleines Auswahlmenü an einer Stelle */
@@ -360,26 +361,37 @@ function menu(anchor: HTMLElement, items: [string, string][]): Promise<string | 
 
 /* ---------------- Werkzeugleiste ---------------- */
 let bar: HTMLElement;
+const barHtml = () => `
+    <span class="hbp-status" aria-live="polite"></span>
+    <div class="hbp-format" hidden>
+      <button type="button" data-cmd="bold" title="${A('fmt.bold')}"><b>${A('fmt.bold').charAt(0)}</b></button>
+      <button type="button" data-cmd="italic" title="${A('fmt.italic')}"><i>${A('fmt.italic').charAt(0)}</i></button>
+      <button type="button" data-cmd="h3" title="${A('fmt.h3')}">${A('fmt.h3').charAt(0)}</button>
+      <button type="button" data-cmd="ul" title="${A('fmt.list')}">• ${A('fmt.list')}</button>
+      <button type="button" data-cmd="link" title="${A('fmt.link')}">${A('fmt.link')}</button>
+      <button type="button" data-cmd="photo" title="${A('fmt.photo')}">+ Foto</button>
+    </div>
+    <button type="button" data-act="edit" class="is-toggle"></button>
+    <button type="button" data-act="manage">${A('bar.manage')}</button>
+    <button type="button" data-act="undo">${A('bar.undo')}</button>
+    <button type="button" data-act="save" class="is-main">${A('bar.save')}</button>
+    <button type="button" data-act="more" aria-haspopup="menu">${A('bar.more')}</button>
+    <button type="button" data-act="lang" class="hbp-lang" title="${A('bar.langLabel')}">${adminLang === 'de' ? 'FR' : 'DE'}</button>`;
+
+/* Sprache des Admins umschalten (Deutsch ↔ Französisch): Leiste und offenes Verwalten-Fenster neu beschriften */
+function switchAdminLang() {
+  setAdminLang(adminLang === 'de' ? 'fr' : 'de');
+  bar.innerHTML = barHtml();
+  updateBar();
+  if (panel) { $('.hbp-dialog-head h2', panel)!.textContent = A('bar.manage'); $('.hbp-x', panel)!.setAttribute('aria-label', A('close')); drawPanel(); }
+}
+
 function buildBar() {
   bar = document.createElement('div');
   bar.className = 'hbp-ui hbp-bar';
   bar.setAttribute('role', 'toolbar');
   bar.setAttribute('aria-label', 'Admin');
-  bar.innerHTML = `
-    <span class="hbp-status" aria-live="polite"></span>
-    <div class="hbp-format" hidden>
-      <button type="button" data-cmd="bold" title="Fett"><b>F</b></button>
-      <button type="button" data-cmd="italic" title="Kursiv"><i>K</i></button>
-      <button type="button" data-cmd="h3" title="Iwwerschrëft">Ü</button>
-      <button type="button" data-cmd="ul" title="Lëscht">• Lëscht</button>
-      <button type="button" data-cmd="link" title="Link">Link</button>
-      <button type="button" data-cmd="photo" title="Foto drasetzen">+ Foto</button>
-    </div>
-    <button type="button" data-act="edit" class="is-toggle"></button>
-    <button type="button" data-act="manage">Verwalten</button>
-    <button type="button" data-act="undo">Réckgängeg</button>
-    <button type="button" data-act="save" class="is-main">Späicheren</button>
-    <button type="button" data-act="more" aria-haspopup="menu">Méi</button>`;
+  bar.innerHTML = barHtml();
   document.body.append(bar);
   document.body.classList.add('has-hbp-bar');
   bar.addEventListener('mousedown', (e) => { if ((e.target as HTMLElement).closest('.hbp-format')) e.preventDefault(); });
@@ -392,12 +404,13 @@ function buildBar() {
     if (act === 'manage') openPanel();
     if (act === 'undo') doUndo();
     if (act === 'save') save();
+    if (act === 'lang') switchAdminLang();
     if (act === 'more') {
-      const v = await menu(b, [['help', 'Kuerz-Uleedung'], ['page', 'Dës Säit op Original'], ['all', 'Alles op Original'], ['logout', 'Ofmellen']]);
+      const v = await menu(b, [['help', A('more.help')], ['page', A('more.page')], ['all', A('more.all')], ['logout', A('more.logout')]]);
       if (v === 'help') help();
       if (v === 'page') resetPage();
-      if (v === 'all' && confirm('Alles op den Original-Zoustand zrécksetzen? Dat kann een net réckgängeg maachen.')) { await storage.resetContent(); state = emptyState(); savedJson = JSON.stringify(state); undo = []; apply(); changed(false); toast('Alles op Original zréckgesat.'); }
-      if (v === 'logout') { if (dirty() && !confirm('Et gëtt Ännerungen, déi net gespäichert sinn. Trotzdeem ofmellen?')) return; await storage.logout(); location.hash = ''; location.reload(); }
+      if (v === 'all' && confirm(A('confirm.all'))) { await storage.resetContent(); state = emptyState(); savedJson = JSON.stringify(state); undo = []; apply(); changed(false); toast(A('toast.allReset')); }
+      if (v === 'logout') { if (dirty() && !confirm(A('confirm.logout'))) return; await storage.logout(); location.hash = ''; location.reload(); }
     }
   });
   document.addEventListener('focusin', () => {
@@ -408,22 +421,21 @@ function buildBar() {
 }
 function updateBar() {
   if (!bar) return;
-  $('[data-act="edit"]', bar)!.textContent = editing ? 'Fäerdeg' : 'Beaarbechten';
+  $('[data-act="edit"]', bar)!.textContent = editing ? A('bar.done') : A('bar.edit');
   $('[data-act="edit"]', bar)!.setAttribute('aria-pressed', String(editing));
   ($('[data-act="undo"]', bar) as HTMLButtonElement).disabled = !undo.length;
   ($('[data-act="save"]', bar) as HTMLButtonElement).disabled = !dirty();
-  $('.hbp-status', bar)!.textContent = dirty() ? 'Net gespäichert' : SITE_STATUS;
+  $('.hbp-status', bar)!.textContent = dirty() ? A('bar.unsaved') : A('bar.saved');
 }
-const SITE_STATUS = 'Alles gespäichert';
 
 function format(cmd: string) {
   const host = (document.getSelection()?.anchorNode?.parentElement as HTMLElement | null)?.closest<HTMLElement>('[data-edit-html]');
-  if (!host) return toast('Klick fir d’éischt an en Text.');
+  if (!host) return toast(A('toast.clickText'));
   if (cmd === 'bold' || cmd === 'italic') document.execCommand(cmd);
   if (cmd === 'h3') document.execCommand('formatBlock', false, document.queryCommandValue('formatBlock') === 'h3' ? 'p' : 'h3');
   if (cmd === 'ul') document.execCommand('insertUnorderedList');
   if (cmd === 'link') {
-    const url = prompt('Link (z. B. https://… oder /club/):', 'https://');
+    const url = prompt(A('prompt.link'), 'https://');
     if (url === null) return;
     if (url.trim() && url.trim() !== 'https://') document.execCommand('createLink', false, url.trim());
     else document.execCommand('unlink');
@@ -458,9 +470,9 @@ async function save() {
     await storage.saveContent(state);
     savedJson = JSON.stringify(state);
     updateBar();
-    toast('Gespäichert.');
+    toast(A('toast.saved'));
   } catch (e) {
-    toast(`Späicheren huet net geklappt: ${(e as Error).message}. Probéier et nach eng Kéier.`, true);
+    toast(A('toast.saveFail', { e: (e as Error).message }), true);
   }
 }
 
@@ -472,19 +484,11 @@ function resetPage() {
   }
   apply();
   changed(false);
-  toast('Dës Säit ass erëm am Original. Späicheren net vergiessen.');
+  toast(A('toast.pageReset'));
 }
 
 function help() {
-  const d = dialog('Kuerz-Uleedung', `
-    <ol class="hbp-help">
-      <li><b>Beaarbechten</b> drécken. Dann en Text uklicken an tippen. Bei Säitentexter erschéngt eng kleng Leescht fir Fett, Iwwerschrëft, Lëscht, Link a Foto.</li>
-      <li><b>Fotoen</b>: am Beaarbechte-Modus e Foto uklicken → anert Foto wielen, verstoppen oder Original.</li>
-      <li><b>Linken</b>: am Beaarbechte-Modus e Link uklicken → neien Link, Original oder opmaachen.</li>
-      <li><b>Verwalten</b>: Equippen (Numm, Trikotnummer, Joergäng, Trainer, Trainingszäiten mat Hal, FLH-Liga fir de Klassement), eegen Matcher, Neiegkeeten, Partner a Club (Adressen, E-Mailen, Hallen, Linken, Bank).</li>
-      <li><b>Späicheren</b> net vergiessen. <b>Réckgängeg</b> mécht de leschte Schrëtt zréck.</li>
-      <li>Sprooch wiesselen: uewen LB · FR · DE. All Sprooch huet hir eegen Texter.</li>
-    </ol>`);
+  const d = dialog(A('help.title'), `<ol class="hbp-help">${(['help.1', 'help.2', 'help.3', 'help.4', 'help.5', 'help.6'] as const).map((k) => `<li>${A(k)}</li>`).join('')}</ol>`);
   d.showModal();
 }
 
@@ -497,7 +501,7 @@ const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 function dialog(title: string, body: string, cls = '') {
   const d = document.createElement('dialog');
   d.className = `hbp-ui hbp-dialog ${cls}`;
-  d.innerHTML = `<div class="hbp-dialog-head"><h2>${esc(title)}</h2><button type="button" class="hbp-x" aria-label="Zoumaachen">×</button></div><div class="hbp-dialog-body">${body}</div>`;
+  d.innerHTML = `<div class="hbp-dialog-head"><h2>${esc(title)}</h2><button type="button" class="hbp-x" aria-label="${esc(A('close'))}">×</button></div><div class="hbp-dialog-body">${body}</div>`;
   document.body.append(d);
   $('.hbp-x', d)!.addEventListener('click', () => d.close());
   d.addEventListener('close', () => { if (d !== panel) d.remove(); });
@@ -506,7 +510,7 @@ function dialog(title: string, body: string, cls = '') {
 
 function openPanel() {
   if (!panel) {
-    panel = dialog('Verwalten', '', 'hbp-panel');
+    panel = dialog(A('bar.manage'), '', 'hbp-panel');
     panel.addEventListener('input', onPanelInput);
     panel.addEventListener('change', onPanelInput);
     panel.addEventListener('click', onPanelClick);
@@ -521,69 +525,69 @@ const field = (label: string, name: string, value: string, attrs = '') =>
 function drawPanel() {
   if (!panel) return;
   const body = $('.hbp-dialog-body', panel)!;
-  const tabs = `<div class="hbp-tabs" role="tablist">${([['teams', 'Equippen'], ['matches', 'Matcher'], ['news', 'Neiegkeeten'], ['partners', 'Partner'], ['club', 'Club']] as const)
+  const tabs = `<div class="hbp-tabs" role="tablist">${([['teams', A('tab.teams')], ['matches', A('tab.matches')], ['news', A('tab.news')], ['partners', A('tab.partners')], ['club', A('tab.club')]] as const)
     .map(([id, l]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${tab === id}">${l}</button>`).join('')}</div>`;
   let html = '';
   if (tab === 'teams') {
-    html = `<p class="hbp-hint">Dës Donnéeë gesäit een op der Startsäit (Trikoten an Trainingszäiten), op de Säite vun den Equippen an op der Trainingsplang-Säit.</p><ul class="hbp-list">${teams().map((t, i) => `
+    html = `<p class="hbp-hint">${A('teams.hint')}</p><ul class="hbp-list">${teams().map((t, i) => `
       <li class="${openItem === t.id ? 'is-open' : ''}${t.hidden ? ' is-hidden' : ''}">
-        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${t.id}"><span class="hbp-nr">${esc(t.nr)}</span>${esc(t.name.lb)}${t.hidden ? ' <em>(verstoppt)</em>' : ''}</button>
-        <span class="hbp-move"><button type="button" data-move="${i}" data-dir="-1" aria-label="Erop">↑</button><button type="button" data-move="${i}" data-dir="1" aria-label="Erof">↓</button></span></div>
+        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${t.id}"><span class="hbp-nr">${esc(t.nr)}</span>${esc(t.name.lb)}${t.hidden ? ` <em>${A('hidden')}</em>` : ''}</button>
+        <span class="hbp-move"><button type="button" data-move="${i}" data-dir="-1" aria-label="${A('up')}">↑</button><button type="button" data-move="${i}" data-dir="1" aria-label="${A('down')}">↓</button></span></div>
         ${openItem === t.id ? `<div class="hbp-form" data-team="${i}">
-          <div class="hbp-grid3">${field('Numm LB', 'name.lb', t.name.lb)}${field('Numm FR', 'name.fr', t.name.fr)}${field('Numm DE', 'name.de', t.name.de)}</div>
-          <div class="hbp-grid3">${field('Trikotnummer', 'nr', t.nr, 'maxlength="3"')}${field('Joergäng', 'years', t.years)}<label class="hbp-field"><span>Grupp</span><select name="group"><option value="seniors"${t.group === 'seniors' ? ' selected' : ''}>Senioren</option><option value="youth"${t.group === 'youth' ? ' selected' : ''}>Jugend</option></select></label></div>
-          ${field('Trainer', 'coach', t.coach)}${field('Championnat / Info', 'league', t.league)}
-          <div class="hbp-grid3">${field('FLH-Numm', 'flh', t.flh ?? '', 'placeholder="Hären 1" title="Esou wéi d’Equipe an de FLH-Matcher heescht"')}${field('FLH-Liga-Nr. (Klassement)', 'flhClass', t.flhClass ?? '', 'inputmode="numeric" title="All Saison nei: Nummer vun der Liga op flh.lu (lId=…)"')}${field('Säit (Adress)', 'page', t.page, 'placeholder="/hären-i/"')}</div>
-          <fieldset><legend>Trainingszäiten</legend>${t.training.map((r, j) => `<div class="hbp-train" data-row="${j}">
-            <select name="day" aria-label="Dag">${DAYS.map((d) => `<option value="${d}"${r.day === d ? ' selected' : ''}>${UI.lb[('day.' + d) as 'day.mon']}</option>`).join('')}</select>
-            <input name="time" value="${esc(r.time)}" aria-label="Auerzäit" placeholder="17:30 – 19:00">
-            <input name="hall" value="${esc(r.hall)}" aria-label="Hal" placeholder="Bim Diederich, Péiteng">
-            <button type="button" data-delrow="${j}" aria-label="Zäit läschen">×</button></div>`).join('')}
-            <button type="button" class="hbp-add" data-addrow>+ Trainingszäit</button></fieldset>
-          <div class="hbp-actions"><label><input type="checkbox" name="hidden"${t.hidden ? ' checked' : ''}> Verstoppen</label><button type="button" class="hbp-danger" data-del="team">Equipe läschen</button></div>
+          <div class="hbp-grid3">${field(A('team.nameLb'), 'name.lb', t.name.lb)}${field(A('team.nameFr'), 'name.fr', t.name.fr)}${field(A('team.nameDe'), 'name.de', t.name.de)}</div>
+          <div class="hbp-grid3">${field(A('team.nr'), 'nr', t.nr, 'maxlength="3"')}${field(A('team.years'), 'years', t.years)}<label class="hbp-field"><span>${A('team.group')}</span><select name="group"><option value="seniors"${t.group === 'seniors' ? ' selected' : ''}>${A('team.seniors')}</option><option value="youth"${t.group === 'youth' ? ' selected' : ''}>${A('team.youth')}</option></select></label></div>
+          ${field(A('team.coach'), 'coach', t.coach)}${field(A('team.league'), 'league', t.league)}
+          <div class="hbp-grid3">${field(A('team.flh'), 'flh', t.flh ?? '', `placeholder="Hären 1" title="${esc(A('team.flhTitle'))}"`)}${field(A('team.flhClass'), 'flhClass', t.flhClass ?? '', `inputmode="numeric" title="${esc(A('team.flhClassTitle'))}"`)}${field(A('team.page'), 'page', t.page, 'placeholder="/hären-i/"')}</div>
+          <fieldset><legend>${A('team.training')}</legend>${t.training.map((r, j) => `<div class="hbp-train" data-row="${j}">
+            <select name="day" aria-label="${A('team.day')}">${DAYS.map((d) => `<option value="${d}"${r.day === d ? ' selected' : ''}>${DAY_NAMES[adminLang][d]}</option>`).join('')}</select>
+            <input name="time" value="${esc(r.time)}" aria-label="${A('team.time')}" placeholder="17:30 – 19:00">
+            <input name="hall" value="${esc(r.hall)}" aria-label="${A('team.hall')}" placeholder="Bim Diederich, Péiteng">
+            <button type="button" data-delrow="${j}" aria-label="${A('team.delRow')}">×</button></div>`).join('')}
+            <button type="button" class="hbp-add" data-addrow>${A('team.addRow')}</button></fieldset>
+          <div class="hbp-actions"><label><input type="checkbox" name="hidden"${t.hidden ? ' checked' : ''}> ${A('hide')}</label><button type="button" class="hbp-danger" data-del="team">${A('team.delete')}</button></div>
         </div>` : ''}
-      </li>`).join('')}</ul><button type="button" class="hbp-add is-big" data-new="team">+ Nei Equipe</button>`;
+      </li>`).join('')}</ul><button type="button" class="hbp-add is-big" data-new="team">${A('team.new')}</button>`;
   }
   if (tab === 'partners') {
-    html = `<p class="hbp-hint">Partner erschéngen als Patches op der Startsäit (Haaptpartner och am Ärmel uewen).</p><ul class="hbp-list hbp-partners">${partners().map((p, i) => `
+    html = `<p class="hbp-hint">${A('partners.hint')}</p><ul class="hbp-list hbp-partners">${partners().map((p, i) => `
       <li class="${openItem === p.id ? 'is-open' : ''}${p.hidden ? ' is-hidden' : ''}">
-        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${p.id}"><img src="${esc(withBase(storage.imageUrl(p.logo)))}" alt="">${esc(p.name || 'Partner ouni Numm')}${p.tier === 'main' ? ' <em>Haaptpartner</em>' : ''}${p.hidden ? ' <em>(verstoppt)</em>' : ''}</button>
-        <span class="hbp-move"><button type="button" data-move="${i}" data-dir="-1" aria-label="Erop">↑</button><button type="button" data-move="${i}" data-dir="1" aria-label="Erof">↓</button></span></div>
+        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${p.id}"><img src="${esc(withBase(storage.imageUrl(p.logo)))}" alt="">${esc(p.name || A('partner.noName'))}${p.tier === 'main' ? ` <em>${A('partner.main')}</em>` : ''}${p.hidden ? ` <em>${A('hidden')}</em>` : ''}</button>
+        <span class="hbp-move"><button type="button" data-move="${i}" data-dir="-1" aria-label="${A('up')}">↑</button><button type="button" data-move="${i}" data-dir="1" aria-label="${A('down')}">↓</button></span></div>
         ${openItem === p.id ? `<div class="hbp-form" data-partner="${i}">
-          ${field('Numm', 'name', p.name)}${field('Websäit', 'url', p.url, 'type="url" placeholder="https://"')}
-          <label class="hbp-field"><span>Kategorie</span><select name="tier"><option value="main"${p.tier === 'main' ? ' selected' : ''}>Haaptpartner</option><option value="partner"${p.tier === 'partner' ? ' selected' : ''}>Partner</option></select></label>
-          <div class="hbp-actions"><button type="button" data-logo>Logo ersetzen</button><label><input type="checkbox" name="dark"${p.dark ? ' checked' : ''}> Logo op donkelem Grond</label><label><input type="checkbox" name="hidden"${p.hidden ? ' checked' : ''}> Verstoppen</label><button type="button" class="hbp-danger" data-del="partner">Läschen</button></div>
+          ${field(A('partner.name'), 'name', p.name)}${field(A('partner.url'), 'url', p.url, 'type="url" placeholder="https://"')}
+          <label class="hbp-field"><span>${A('partner.tier')}</span><select name="tier"><option value="main"${p.tier === 'main' ? ' selected' : ''}>${A('partner.main')}</option><option value="partner"${p.tier === 'partner' ? ' selected' : ''}>${A('partner.partner')}</option></select></label>
+          <div class="hbp-actions"><button type="button" data-logo>${A('partner.logo')}</button><label><input type="checkbox" name="dark"${p.dark ? ' checked' : ''}> ${A('partner.dark')}</label><label><input type="checkbox" name="hidden"${p.hidden ? ' checked' : ''}> ${A('hide')}</label><button type="button" class="hbp-danger" data-del="partner">${A('delete')}</button></div>
         </div>` : ''}
-      </li>`).join('')}</ul><button type="button" class="hbp-add is-big" data-new="partner">+ Neie Partner</button>`;
+      </li>`).join('')}</ul><button type="button" class="hbp-add is-big" data-new="partner">${A('partner.new')}</button>`;
   }
   if (tab === 'news') {
-    html = `<p class="hbp-hint">Nei Beiträg stinn uewen. Al Beiträg kann een hei verstoppen oder ëmbenennen; hiren Text ännert een direkt op der Säit.</p><button type="button" class="hbp-add is-big" data-new="news">+ Neie Beitrag</button><ul class="hbp-list">${news().map((n, i) => `
+    html = `<p class="hbp-hint">${A('news.hint')}</p><button type="button" class="hbp-add is-big" data-new="news">${A('news.new')}</button><ul class="hbp-list">${news().map((n, i) => `
       <li class="${openItem === n.id ? 'is-open' : ''}${n.hidden ? ' is-hidden' : ''}">
-        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${esc(n.id)}">${n.category === 'neu' ? '<span class="hbp-new">Nei</span>' : ''}${esc(n.title || 'Ouni Titel')}${n.hidden ? ' <em>(verstoppt)</em>' : ''}<small>${esc(n.date)}</small></button></div>
+        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${esc(n.id)}">${n.category === 'neu' ? `<span class="hbp-new">${A('news.badge')}</span>` : ''}${esc(n.title || A('news.untitled'))}${n.hidden ? ` <em>${A('hidden')}</em>` : ''}<small>${esc(n.date)}</small></button></div>
         ${openItem === n.id ? `<div class="hbp-form" data-news="${i}">
-          ${field('Titel', 'title', n.title)}
-          <div class="hbp-grid3">${field('Datum', 'date', n.date, 'type="date"')}<div class="hbp-field"><span>Foto</span><button type="button" data-newsimg>${n.image ? 'Foto ersetzen' : 'Foto derbäi'}</button></div></div>
-          ${n.category === 'neu' ? `<label class="hbp-field"><span>Text (eidel Zeil = neien Abschnitt)</span><textarea name="text" rows="8">${esc((n.html || '').replace(/<\/p>\s*<p>/g, '\n\n').replace(/<[^>]+>/g, ''))}</textarea></label>` : field('Kuerztext', 'excerpt', n.excerpt)}
-          <div class="hbp-actions">${n.path ? `<a href="${esc(withBase(href(lang, n.path)))}" target="_blank">Säit opmaachen</a>` : `<a href="${esc(withBase(href(lang, '/noriichten-1/neu/')))}#${encodeURIComponent(n.id)}" target="_blank">Virschau</a>`}<label><input type="checkbox" name="hidden"${n.hidden ? ' checked' : ''}> Verstoppen</label>${n.category === 'neu' ? '<button type="button" class="hbp-danger" data-del="news">Läschen</button>' : ''}</div>
+          ${field(A('news.title'), 'title', n.title)}
+          <div class="hbp-grid3">${field(A('news.date'), 'date', n.date, 'type="date"')}<div class="hbp-field"><span>${A('news.photo')}</span><button type="button" data-newsimg>${n.image ? A('news.photoReplace') : A('news.photoAdd')}</button></div></div>
+          ${n.category === 'neu' ? `<label class="hbp-field"><span>${A('news.text')}</span><textarea name="text" rows="8">${esc((n.html || '').replace(/<\/p>\s*<p>/g, '\n\n').replace(/<[^>]+>/g, ''))}</textarea></label>` : field(A('news.excerpt'), 'excerpt', n.excerpt)}
+          <div class="hbp-actions">${n.path ? `<a href="${esc(withBase(href(lang, n.path)))}" target="_blank">${A('news.open')}</a>` : `<a href="${esc(withBase(href(lang, '/noriichten-1/neu/')))}#${encodeURIComponent(n.id)}" target="_blank">${A('news.preview')}</a>`}<label><input type="checkbox" name="hidden"${n.hidden ? ' checked' : ''}> ${A('hide')}</label>${n.category === 'neu' ? `<button type="button" class="hbp-danger" data-del="news">${A('delete')}</button>` : ''}</div>
         </div>` : ''}
       </li>`).join('')}</ul>`;
   }
   if (tab === 'matches') {
     const flhTeams = teams().filter((t) => !t.hidden && t.flh);
     const teamName = (flh: string) => flhTeams.find((t) => t.flh === flh)?.name.lb ?? flh;
-    html = `<p class="hbp-hint">Championnat- a Coupe-Matcher kommen automatesch vun der FLH. Hei setzt een eegen Matcher derbäi (Frëndschaftsmatch, Turnéier, Coupe …). Si stinn dann op der Startsäit an op der Säit vun der Equipe; mat Tore gëtt et e Resultat.</p><button type="button" class="hbp-add is-big" data-new="match">+ Neie Match</button><ul class="hbp-list">${state.matches.map((m, i) => `
+    html = `<p class="hbp-hint">${A('matches.hint')}</p><button type="button" class="hbp-add is-big" data-new="match">${A('matches.new')}</button><ul class="hbp-list">${state.matches.map((m, i) => `
       <li class="${openItem === m.id ? 'is-open' : ''}${m.hidden ? ' is-hidden' : ''}">
-        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${esc(m.id)}">${esc(teamName(m.team))} – ${esc(m.opponent || 'Géigner?')}${m.hidden ? ' <em>(verstoppt)</em>' : ''}<small>${esc(m.date)} ${esc(m.time)}</small></button></div>
+        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${esc(m.id)}">${esc(teamName(m.team))} – ${esc(m.opponent || A('match.opponent?'))}${m.hidden ? ` <em>${A('hidden')}</em>` : ''}<small>${esc(m.date)} ${esc(m.time)}</small></button></div>
         ${openItem === m.id ? `<div class="hbp-form" data-match="${i}">
-          <div class="hbp-grid3"><label class="hbp-field"><span>Equipe</span><select name="team">${flhTeams.map((t) => `<option value="${esc(t.flh!)}"${m.team === t.flh ? ' selected' : ''}>${esc(t.name.lb)}</option>`).join('')}</select></label>${field('Datum', 'date', m.date, 'type="date"')}${field('Auerzäit', 'time', m.time, 'placeholder="18:00"')}</div>
-          <div class="hbp-grid3"><label class="hbp-field"><span>Wou</span><select name="isHome"><option value="1"${m.isHome ? ' selected' : ''}>Doheem</option><option value="0"${!m.isHome ? ' selected' : ''}>Auswäerts</option></select></label>${field('Géigner', 'opponent', m.opponent)}${field('Wat fir e Match', 'competition', m.competition, 'placeholder="Frëndschaftsmatch"')}</div>
-          <div class="hbp-grid3">${field('Hal', 'hall', m.hall)}${field('Uertschaft', 'town', m.town)}<div class="hbp-field"><span>Resultat (Péiteng : Géigner)</span><span class="hbp-score"><input name="ours" value="${esc(m.ours)}" inputmode="numeric" aria-label="Tore Péiteng"> : <input name="theirs" value="${esc(m.theirs)}" inputmode="numeric" aria-label="Tore Géigner"></span></div></div>
-          <div class="hbp-actions"><label><input type="checkbox" name="hidden"${m.hidden ? ' checked' : ''}> Verstoppen</label><button type="button" class="hbp-danger" data-del="match">Läschen</button></div>
+          <div class="hbp-grid3"><label class="hbp-field"><span>${A('match.team')}</span><select name="team">${flhTeams.map((t) => `<option value="${esc(t.flh!)}"${m.team === t.flh ? ' selected' : ''}>${esc(t.name.lb)}</option>`).join('')}</select></label>${field(A('match.date'), 'date', m.date, 'type="date"')}${field(A('match.time'), 'time', m.time, 'placeholder="18:00"')}</div>
+          <div class="hbp-grid3"><label class="hbp-field"><span>${A('match.where')}</span><select name="isHome"><option value="1"${m.isHome ? ' selected' : ''}>${A('match.home')}</option><option value="0"${!m.isHome ? ' selected' : ''}>${A('match.away')}</option></select></label>${field(A('match.opponent'), 'opponent', m.opponent)}${field(A('match.kind'), 'competition', m.competition, `placeholder="${esc(A('match.kindPh'))}"`)}</div>
+          <div class="hbp-grid3">${field(A('match.hall'), 'hall', m.hall)}${field(A('match.town'), 'town', m.town)}<div class="hbp-field"><span>${A('match.result')}</span><span class="hbp-score"><input name="ours" value="${esc(m.ours)}" inputmode="numeric" aria-label="${esc(A('match.ours'))}"> : <input name="theirs" value="${esc(m.theirs)}" inputmode="numeric" aria-label="${esc(A('match.theirs'))}"></span></div></div>
+          <div class="hbp-actions"><label><input type="checkbox" name="hidden"${m.hidden ? ' checked' : ''}> ${A('hide')}</label><button type="button" class="hbp-danger" data-del="match">${A('delete')}</button></div>
         </div>` : ''}
       </li>`).join('')}</ul>`;
   }
   if (tab === 'club') {
-    html = `<p class="hbp-hint">Dës Donnéeë stinn ënnen op all Säit, am Menü ënner Kontakt, op der Kontakt- an Impressum-Säit an op de Säite vun de Sportshalen. Eidel loossen = Original.</p>${siteFields().map(([title, fields]) => `<fieldset class="hbp-form" data-site><legend>${esc(title)}</legend>${fields.map(([k, label]) => field(label, k, state.site[k] ?? String(getPath(base.site, k) ?? ''))).join('')}</fieldset>`).join('')}`;
+    html = `<p class="hbp-hint">${A('club.hint')}</p>${siteFields().map(([title, fields]) => `<fieldset class="hbp-form" data-site><legend>${esc(title)}</legend>${fields.map(([k, label]) => field(label, k, state.site[k] ?? String(getPath(base.site, k) ?? ''))).join('')}</fieldset>`).join('')}`;
   }
   const scroll = body.scrollTop;
   body.innerHTML = tabs + html;
@@ -655,7 +659,7 @@ async function onPanelClick(ev: Event) {
       if (!logo) return;
       editList<Partner>('partners').push({ id, name: '', logo, url: '', tier: 'partner' });
     }
-    if (b.dataset.new === 'news') editList<NewsItem>('news').unshift({ id, title: 'Neie Beitrag', date: new Date().toISOString().slice(0, 10), path: '', image: '', excerpt: '', category: 'neu', html: '' });
+    if (b.dataset.new === 'news') editList<NewsItem>('news').unshift({ id, title: A('news.defaultTitle'), date: new Date().toISOString().slice(0, 10), path: '', image: '', excerpt: '', category: 'neu', html: '' });
     if (b.dataset.new === 'match') state.matches.unshift({ id, team: teams().find((t) => !t.hidden && t.flh)?.flh ?? '', date: new Date().toISOString().slice(0, 10), time: '', isHome: true, opponent: '', hall: 'Centre sportif Bim Diederich', town: 'Péiteng', ours: '', theirs: '', competition: '' });
     openItem = id;
     render(); changed(false); return drawPanel();
@@ -669,7 +673,7 @@ async function onPanelClick(ev: Event) {
     render(); changed(false); return drawPanel();
   }
   if (b.dataset.del) {
-    if (!confirm('Wierklech läschen?')) return;
+    if (!confirm(A('confirm.delete'))) return;
     beforeChange();
     if (form.dataset.match) state.matches.splice(+form.dataset.match, 1);
     else editList<unknown>(listKey as 'teams' | 'partners' | 'news').splice(+(form.dataset.team ?? form.dataset.partner ?? form.dataset.news)!, 1);
@@ -695,12 +699,12 @@ async function onPanelClick(ev: Event) {
 /* ---------------- Login ---------------- */
 function loginDialog(): Promise<boolean> {
   return new Promise((res) => {
-    const d = dialog('Login', `
+    const d = dialog(A('login.title'), `
       <form class="hbp-login" method="dialog">
-        <label class="hbp-field"><span>Benotzernumm</span><input name="user" autocomplete="username" required></label>
-        <label class="hbp-field"><span>Passwuert</span><input name="pass" type="password" autocomplete="current-password" required></label>
-        <p class="hbp-error" role="alert" hidden>Benotzernumm oder Passwuert stëmmt net.</p>
-        <button type="submit" class="hbp-submit">Umellen</button>
+        <label class="hbp-field"><span>${A('login.user')}</span><input name="user" autocomplete="username" required></label>
+        <label class="hbp-field"><span>${A('login.pass')}</span><input name="pass" type="password" autocomplete="current-password" required></label>
+        <p class="hbp-error" role="alert" hidden>${A('login.error')}</p>
+        <button type="submit" class="hbp-submit">${A('login.submit')}</button>
       </form>`, 'hbp-small');
     const f = $<HTMLFormElement>('form', d)!;
     let ok = false;
@@ -746,7 +750,7 @@ export async function start(wantLogin = false) {
       loggedIn = true;
       buildBar();
       setEditing(true);
-      toast('Wëllkomm! Klick en Text oder e Foto un, fir en z’änneren.');
+      toast(A('welcome'));
     }
   }
   if (location.hash === '#login') history.replaceState(null, '', location.pathname + location.search);

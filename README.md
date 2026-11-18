@@ -42,7 +42,7 @@ Die Daten kommen von Handball4all, derselben Quelle wie flh.lu.
 
 ## Admin (wie Rondpoint/Krombach)
 
-„Login“ ganz unten im Footer öffnet die Anmeldung. Danach:
+„Login“ ganz unten im Footer öffnet die Anmeldung. Der Admin ist auf Deutsch oder Französisch (Umschalter DE/FR in der Leiste, merkt sich der Browser). Danach:
 
 - **Beaarbechten:** Texte antippen und tippen. Ganze Seiteninhalte haben eine kleine Leiste (Fett, Kursiv, Überschrift, Liste, Link, Foto).
 - **Fotos:** im Bearbeiten-Modus antippen → anderes Foto, verstecken, Original. Fotos werden im Browser auf 2000 px verkleinert.

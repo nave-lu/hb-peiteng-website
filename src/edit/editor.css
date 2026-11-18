@@ -101,3 +101,5 @@ fieldset.hbp-form legend { font-family: var(--cond); font-weight: 700; text-tran
 /* Resultat eigener Matcher: zwei kleine Felder */
 .hbp-score { display: flex; align-items: center; gap: 6px; }
 .hbp-score input { width: 4.5em; }
+/* Sprache des Admins (DE ↔ FR) */
+.hbp-bar .hbp-lang { min-width: 3em; font-weight: 700; letter-spacing: 0.06em; }

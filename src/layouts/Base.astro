@@ -142,15 +142,18 @@ const joinPath = '/club/gëff-handballspiller-inn/';
             </ul>
           </div>
         </div>
-        <div class="shorts-base">
-          <span>© {new Date().getFullYear()} {site.fullName}</span>
-          <nav aria-label="Rechtliches">
-            <a href={href(lang, '/impressum/')}>{t(lang, 'footer.legal')}</a>
-            <a href={href(lang, '/dateschutz/')}>{t(lang, 'footer.privacy')}</a>
-            <a href="#login" data-login>{t(lang, 'footer.login')}</a>
-          </nav>
-          <a class="made-by" href="https://nave.lu" target="_blank" rel="noopener">Created by <img src="/brand/nave-n.png" alt="" width="15" height="18" loading="lazy" /><img class="made-by-word" src="/brand/nave-wordmark.png" alt="Nave" width="43" height="14" loading="lazy" /></a>
-        </div>
+      </div>
+      {/* letzte Zeile genau in der Seitenmitte (die Spalten darüber sind wegen der Streifen links versetzt) */}
+      <div class="shorts-bottom">
+          <div class="shorts-base">
+            <span>© {new Date().getFullYear()} {site.fullName}</span>
+            <nav aria-label="Rechtliches">
+              <a href={href(lang, '/impressum/')}>{t(lang, 'footer.legal')}</a>
+              <a href={href(lang, '/dateschutz/')}>{t(lang, 'footer.privacy')}</a>
+              <a href="#login" data-login>{t(lang, 'footer.login')}</a>
+            </nav>
+            <a class="made-by" href="https://nave.lu" target="_blank" rel="noopener">Created by <img src="/brand/nave-n.png" alt="" width="15" height="18" loading="lazy" /><img class="made-by-word" src="/brand/nave-wordmark.png" alt="Nave" width="43" height="14" loading="lazy" /></a>
+          </div>
       </div>
     </footer>
 
