@@ -61,10 +61,28 @@ Besucher laden nur `src/edit/boot.ts`; der Editor kommt erst nach dem Login.
 Astro 7, statisch, ohne Framework im Browser. Schriften selbst gehostet (`public/fonts/`, OFL): Big Shoulders Display, Barlow, Barlow Condensed.
 Bausteine, die Seite und Editor teilen (Trikot, Patches, News): `src/lib/render.ts`.
 
-## Online stellen (GitHub Pages)
+## Online stellen (GitHub Pages, wie Blackstar)
 
 ```bash
 npm run deploy
 ```
 
-Baut die Seite, stellt alle Pfade auf `/hb-peiteng-website/` um (`scripts/pages-base.mjs`) und lädt das Ergebnis in den Branch `gh-pages`. Adresse: https://xjamie007.github.io/hb-peiteng-website/ — mit eigener Domain fällt die Pfad-Umstellung weg.
+Baut die Seite und lädt sie in den Branch `gh-pages`; GitHub Pages liefert sie aus.
+
+- **Jetzt (Vorschau):** https://xjamie007.github.io/hb-peiteng-website/ – dafür stellt `scripts/pages-base.mjs` alle Pfade auf `/hb-peiteng-website/` um.
+- **Mit eigener Domain (www.hbpeiteng.com):** genau wie bei www.blackstar-mersch.lu – Domain bei my.lu, Website weiter auf GitHub Pages.
+
+### Umzug auf www.hbpeiteng.com (Reihenfolge einhalten)
+
+Heute liegt `hbpeiteng.com` bei Jimdo (Registrar InterNetX, Nameserver `ns13/ns14.jimdo.com`), **auch die E-Mails** (`ca@`, `president@`, `wisi-cup@` über `mx1/mx2.jimdo.com`).
+
+1. Bei my.lu die E-Mail-Postfächer (bzw. Weiterleitungen) für `ca@`, `president@`, `wisi-cup@hbpeiteng.com` anlegen (bei Blackstar: `mx.mbox.lu`).
+2. Domain von Jimdo zu my.lu transferieren (Auth-Code bei Jimdo anfordern).
+3. DNS bei my.lu – wie bei Blackstar:
+   - `hbpeiteng.com` A → `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
+   - `www.hbpeiteng.com` CNAME → `xjamie007.github.io.`
+   - MX auf das neue Postfach (my.lu/mbox.lu)
+4. Wenn die DNS-Einträge aktiv sind: `echo www.hbpeiteng.com > public/CNAME`, committen, `npm run deploy`, danach in GitHub → Settings → Pages „Enforce HTTPS“ anhaken.
+   Mit `public/CNAME` entfällt die Pfad-Umstellung automatisch, die Seite läuft im Wurzelverzeichnis.
+
+Erst Schritt 4 machen, wenn die Domain wirklich auf GitHub zeigt – sonst leitet die Vorschau-Adresse auf die alte Jimdo-Seite um.

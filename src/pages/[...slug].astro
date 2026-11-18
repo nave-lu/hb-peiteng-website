@@ -2,6 +2,7 @@
 /* Ein Einstieg für alle Seiten und Sprachen.
  * LB: alte Adressen der Jimdo-Seite bleiben gleich (z. B. /hären-i/kader/).
  * FR/DE: dieselben Adressen mit /fr bzw. /de davor. */
+import { privacyHtml } from '../lib/privacy';
 import Home from '../views/Home.astro';
 import Page from '../views/Page.astro';
 import { LANGS, t, href, type Lang } from '../i18n/ui';
@@ -36,7 +37,7 @@ export function getStaticPaths() {
       },
       {
         page: { path: '/dateschutz/', title: t(lang, 'footer.privacy'), section: 'club', html: '' },
-        extra: `<p><strong>[FEHLT]</strong> Dateschutzerklärung vum Club, ze kréien a ze préiwen.</p><p>Dës Säit setzt keng Cookien a keng Statistik-Tools an. Videoe vu Vimeo ginn eréischt gelueden, wann d'Säit mat engem Video opgemaach gëtt. D'Kaarten op de Säite vun de Sportshalen kommen vun OpenStreetMap (openstreetmap.org) a ginn nëmmen do gelueden.</p>`,
+        extra: privacyHtml(lang),
       },
       { page: { path: '/noriichten-1/archiv/', title: t(lang, 'news.archive'), section: 'noriichten', html: '' } },
       { page: { path: '/noriichten-1/neu/', title: t(lang, 'news.title'), section: 'noriichten', html: '' }, extra: '<div data-render="news-draft"></div>' },

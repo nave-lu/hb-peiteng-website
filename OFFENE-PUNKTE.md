@@ -3,7 +3,7 @@
 ## Vom Club zu klären
 - **Kontakt:** Telefonnummer fehlt. Auf der alten Seite gab es nur ein Formular; die E-Mails stammen aus Organigramme und Wisi-Cup-Seiten.
 - **Logo:** nur als Banner-Bild vorhanden (ausgeschnitten nach `public/brand/hbp-logo.jpg`). Bitte Vektor-Datei (SVG/PDF) besorgen.
-- **Dateschutz:** Die Sporthallen-Seiten binden OpenStreetMap-Karten ein (Kartenkacheln von openstreetmap.org); das gehört in die Datenschutzerklärung. Text fehlt (`/dateschutz/` zeigt `[FEHLT]`). Impressum prüfen (`/impressum/`).
+- **Dateschutz:** Text steht (LB/FR/DE, `src/lib/privacy.ts`, Stand Nov. 2026) – vom Comité gegenlesen lassen. Prüfen: Einverständnis der Eltern für Kinderfotos (falls ja, im Abschnitt „Fotoen“ ergänzen); Hosting bleibt GitHub Pages (wie Blackstar), auch mit eigener Domain. Impressum prüfen (`/impressum/`).
 - **Partner-Links:** 8 von 18 Logos sind verlinkt (geprüft). Bei den übrigen 10 fehlen Name und Website; im Admin unter Verwalten → Partner eintragen.
 - **Matcher & Resultater:** kommen jetzt automatisch von der FLH (Handball4all, dieselben Daten wie flh.lu), beim Bauen und bei jedem Seitenaufruf. Erkannt werden Teams mit „Pétange/Péiteng“ im Namen (inkl. Entente Bieles/Pétange).
 - **Comité-Hinweise:** sind jetzt vier News-Beiträge (Bénévoles, Jugendtraining, RE-FILL, Ukraine) ohne Datum. Daten nachtragen. Der alte Corona-Hinweis wurde nicht übernommen.
@@ -25,3 +25,4 @@
 ## Technik
 - Admin speichert im Demo-Modus nur im Browser. Für den Betrieb `storage.ts` auf `server` (api.php) oder GitHub-Commit umstellen.
 - Weiterleitungen: LB-Adressen sind gleich geblieben. Jimdo-Adressen unter `/j/…` (Dateschutz, Shop-Recht) gibt es nicht mehr.
+- **Domain:** Umzug von Jimdo zu my.lu inkl. E-Mails – Schritte im README unter „Umzug auf www.hbpeiteng.com“.
