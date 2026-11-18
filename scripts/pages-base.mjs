@@ -10,10 +10,8 @@ import { join } from 'node:path';
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 
-export const rebase = (s, b) =>
-  s
-    .replace(/(=\s*["'])\/(?!\/)/g, `$1${b}/`) // Attribute
-    .replace(/url\((["']?)\/(?!\/)/g, `url($1${b}/`); // CSS und style="…url(/…)"
+import { rebase } from '../src/lib/rebase.mjs';
+export { rebase };
 
 /** „index 3.html“ → „index.html“, sonst null */
 export const icloudOriginal = (path) => {

@@ -95,3 +95,9 @@ body.is-editing [data-render] { outline: 2px dotted rgb(31 111 235 / 0.6); outli
   background: var(--ink); color: var(--white); padding: 12px 18px; border-radius: 6px; box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.6); transition: opacity 0.25s, translate 0.35s var(--ease); max-width: calc(100vw - 24px); }
 .hbp-toast.is-on { opacity: 1; translate: -50% 0; }
 .hbp-toast.is-error { background: #a1170d; }
+/* Club-Daten: eine Gruppe je Bereich */
+fieldset.hbp-form { border: 1.5px solid #ddd9cc; border-radius: 8px; margin: 0 0 12px; padding: 8px 12px 12px; }
+fieldset.hbp-form legend { font-family: var(--cond); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.85rem; padding: 0 4px; }
+/* Resultat eigener Matcher: zwei kleine Felder */
+.hbp-score { display: flex; align-items: center; gap: 6px; }
+.hbp-score input { width: 4.5em; }

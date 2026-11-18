@@ -44,9 +44,22 @@ export interface EditState {
   teams: Team[] | null;
   partners: Partner[] | null;
   news: NewsItem[] | null;
+  /** ursprüngliche Link-Adresse → neue Adresse */
+  links: Record<string, string>;
+  /** Club-Daten (site.json), Feldpfad → neuer Wert, z. B. "emails.club" */
+  site: Record<string, string>;
+  /** eigene Spiele (zusätzlich zu den FLH-Spielen) */
+  matches: OwnMatch[];
 }
 
-export const emptyState = (): EditState => ({ v: 1, texts: {}, html: {}, photos: {}, teams: null, partners: null, news: null });
+export interface OwnMatch {
+  id: string; team: string; date: string; time: string; isHome: boolean; opponent: string;
+  hall: string; town: string; ours: string; theirs: string; competition: string; hidden?: boolean;
+}
+
+export const emptyState = (): EditState => ({ v: 1, texts: {}, html: {}, photos: {}, teams: null, partners: null, news: null, links: {}, site: {}, matches: [] });
+/** ältere gespeicherte Stände bekommen die neuen Felder dazu */
+export const normalize = (c: Partial<EditState> | null): EditState => ({ ...emptyState(), ...(c ?? {}) });
 
 export interface SiteStorage {
   hint(): boolean;

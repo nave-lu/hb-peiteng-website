@@ -149,7 +149,7 @@ else if (page.path === '/partner/') html = `<h2 class="partner-group">${t(lang, 
           </details>
         )}
         {hallMaps.map((h) => (
-          <section class="hall-map">
+          <section class="hall-map" data-hall={h.id}>
             <h2>{h.name}</h2>
             <p>{[h.street, h.city].filter(Boolean).join(', ')}</p>
             <div class="map-frame">

@@ -185,6 +185,14 @@ const freshWeeks = () => cached('flh-weeks-v3', async () => [
 ]);
 const freshTables = (m: Match[]) => cached('flh-tables-v2-' + [...new Set(m.map((x) => x.classId))].sort().join('-'), () => fetchTables(m));
 
+/* Eigene Spiele aus dem Admin (Freundschaftsspiele, Turniere …): kommen per Ereignis „hbp:data“ dazu */
+let extraMatches: Match[] = [];
+const dataListeners: (() => void)[] = [];
+addEventListener('hbp:data', (ev) => {
+  extraMatches = ((ev as CustomEvent).detail?.matches ?? []) as Match[];
+  dataListeners.forEach((f) => f());
+});
+
 const box = document.querySelector<HTMLElement>('[data-matches]');
 const liveEl = document.querySelector<HTMLElement>('[data-live]');
 const liveLabel = { lb: 'Elo live', fr: 'En direct', de: 'Jetzt live' } as Record<string, string>;
@@ -201,7 +209,7 @@ if (box) {
   paintLive(base.matches);
   const refresh = () => freshWeeks()
     .then(async (fresh) => {
-      const m = windowMatches(mergeMatches(base.matches, fresh));
+      const m = windowMatches(mergeMatches(base.matches, [...fresh, ...extraMatches]));
       box.innerHTML = matchCards(m, lang);
       setupCarousel(box.closest<HTMLElement>('[data-carousel]')!);
       paintLive(m);
@@ -220,6 +228,7 @@ if (box) {
     })
     .catch(() => { /* Schnappschuss bleibt stehen */ });
   refresh();
+  dataListeners.push(refresh);
   // Automatisch: alle 2 Minuten nachsehen. Der 5-Minuten-Cache bremst die Anfragen an die FLH;
   // nur während eines laufenden Matches wird er übersprungen (dann wirklich alle 2 Minuten).
   // Die Wochen rechnen ab heute, rücken also jede Woche von selbst weiter.
@@ -238,9 +247,9 @@ if (teamLive) {
   const { teamLive: team, mode, lang, hResults, hTable } = teamLive.dataset as Record<string, string>;
   const base = readBase(teamLive);
   const keep = teamLive.querySelector('[data-flh-base]')!;
-  freshWeeks()
+  const draw = () => freshWeeks()
     .then(async (fresh) => {
-      const list = teamMatches(mergeMatches(base.matches, fresh), team, mode as LiveMode);
+      const list = teamMatches(mergeMatches(base.matches, [...fresh, ...extraMatches]), team, mode as LiveMode);
       const tables = mode === 'cup' ? [] : await freshTables(list).catch(() => base.tables);
       const html = teamLiveHtml(list, tables, mode as LiveMode, lang as Lang, { results: hResults, table: hTable });
       // nur ersetzen, wenn wirklich etwas Neues da ist (sonst bleibt Schnappschuss bzw. Link auf flh.lu)
@@ -249,6 +258,8 @@ if (teamLive) {
       teamLive.append(keep);
     })
     .catch(() => { /* Schnappschuss bleibt */ });
+  draw();
+  dataListeners.push(draw);
 }
 
 // Klassement: Reiter

@@ -5,3 +5,5 @@ dist/
 hbpeiteng-basis/fotos/
 .impeccable/review/
 Demo-Zugang*.txt
+# iCloud-Konfliktkopien (z. B. „bild 2.png“)
+* [0-9].*

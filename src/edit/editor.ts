@@ -1,11 +1,15 @@
 /* Admin direkt auf der Seite (Login im Footer).
  * - Texte: antippen und tippen (feste Texte, Seitentitel, ganze Seiteninhalte)
  * - Fotos: antippen → neues Foto aus der Galerie oder der Kamera
- * - Verwalten: Equippen (Nummer, Trainer, Trainingszeiten), Neiegkeeten, Partner
+ * - Links: antippen → neue Adresse
+ * - Verwalten: Equippen (Nummer, Trainer, Trainingszeiten, FLH-Liga), eigene Matcher, Neiegkeeten, Partner,
+ *   Club-Daten (Adressen, E-Mails, Hallen, Links, Bank)
  * Speichern geht über storage.ts (Demo: dieser Browser; Betrieb: api.php). */
 import './editor.css';
-import { storage, emptyState, preloadImages, type EditState } from './storage';
+import { storage, emptyState, normalize, preloadImages, type EditState, type OwnMatch } from './storage';
 import { teamsGrid, teamPanel, trainingCards, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
+import { MAIN_TABLE_TEAMS, type Match } from '../lib/matches';
+import { rebase } from '../lib/rebase.mjs';
 import { UI, LANGS, href, type Lang } from '../i18n/ui';
 
 const lang = (document.body.dataset.lang || 'lb') as Lang;
@@ -14,9 +18,14 @@ const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = docu
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => [...root.querySelectorAll(sel)] as T[];
 const esc = (s: string) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+/* Wurzel der Seite (GitHub Pages: /hb-peiteng-website/). Neu gezeichnete Bausteine bekommen dieselben Pfade wie die gebaute Seite. */
+const BASE = (document.querySelector<HTMLMetaElement>('meta[name="site-base"]')?.content || '/').replace(/\/?$/, '/');
+const fix = (html: string) => (BASE === '/' ? html : rebase(html, BASE.slice(0, -1)));
+const withBase = (p: string) => (p.startsWith('/') && !p.startsWith('//') ? BASE + p.slice(1) : p);
 
-interface Base { teams: Team[]; partners: Partner[]; news: NewsItem[] }
-let base: Base = { teams: [], partners: [], news: [] };
+type SiteData = Record<string, unknown>;
+interface Base { teams: Team[]; partners: Partner[]; news: NewsItem[]; site: SiteData }
+let base: Base = { teams: [], partners: [], news: [], site: {} };
 let state: EditState = emptyState();
 let savedJson = '';
 let undo: string[] = [];
@@ -33,6 +42,15 @@ function remember() {
   for (const el of $$('[data-edit]')) el.dataset.orig ??= el.textContent ?? '';
   for (const el of $$('[data-edit-html]')) el.dataset.orig ??= el.innerHTML;
   for (const img of $$<HTMLImageElement>('main img')) if (!img.closest('[data-edit-html],[data-render]')) img.dataset.orig ??= img.getAttribute('src') ?? '';
+  for (const a of $$<HTMLAnchorElement>('main a[href], .shorts a[href], .menu a[href]')) if (!a.closest('.hbp-ui')) a.dataset.origHref ??= a.getAttribute('href') ?? '';
+  if (!textNodes.size) {
+    for (const scope of $$(SITE_SCOPES)) {
+      const w = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT);
+      for (let n = w.nextNode() as Text | null; n; n = w.nextNode() as Text | null) {
+        if (n.data.trim() && !n.parentElement?.closest('[data-edit],[data-edit-html],[data-render]')) textNodes.set(n, n.data);
+      }
+    }
+  }
 }
 
 const showUrls = (html: string) =>
@@ -45,29 +63,78 @@ function readHtml(el: HTMLElement): string {
   return c.innerHTML;
 }
 
+/* eigene Matcher → gleiche Form wie die FLH-Spiele */
+let dataTimer = 0;
+const CLUB_NAME = 'HB Péiteng';
+const toMatch = (o: OwnMatch): Match => ({
+  id: o.id, date: o.date, time: o.time, team: o.team, competition: o.competition || 'Frëndschaftsmatch',
+  home: o.isHome ? CLUB_NAME : o.opponent, guest: o.isHome ? o.opponent : CLUB_NAME,
+  homeGoals: o.isHome ? o.ours : o.theirs, guestGoals: o.isHome ? o.theirs : o.ours,
+  hall: o.hall, town: o.town, isHome: o.isHome, classId: '', cls: '', live: false,
+});
+const ownMatches = () => state.matches.filter((m) => !m.hidden && m.date && m.team).map(toMatch);
+
+/* Club-Daten (site.json): welche Felder es gibt; geänderte Werte werden in Fußzeile, Menü, Kontakt, Impressum und Hallen ersetzt */
+const getPath = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((v, k) => (v as Record<string, unknown> | undefined)?.[k], o);
+function siteFields(): [string, [string, string][]][] {
+  const s = base.site as { halls?: { name: string }[]; address?: string[]; bank?: string[] };
+  return [
+    ['Club', [['fullName', 'Numm vum Club'], ...(s.address ?? []).map((_, i): [string, string] => [`address.${i}`, `Adress, Zeil ${i + 1}`])]],
+    ['E-Mailen', [['emails.club', 'Sekretariat'], ['emails.president', 'President'], ['emails.wisiCup', 'Wisi-Cup']]],
+    ['Links', [['links.livestream', 'Livestream'], ['links.flhKlassement', 'FLH-Klassement'], ['links.refill', 'Shop'], ['links.facebook', 'Facebook']]],
+    ...(s.halls ?? []).map((h, i): [string, [string, string][]] => [`Hal: ${h.name}`, [[`halls.${i}.name`, 'Numm'], [`halls.${i}.street`, 'Strooss'], [`halls.${i}.city`, 'Uertschaft'], [`halls.${i}.map`, 'Google-Maps-Link'], [`halls.${i}.lat`, 'Kaart: Breedegrad'], [`halls.${i}.lon`, 'Kaart: Längegrad']]]),
+    ['Bank', (s.bank ?? []).map((_, i): [string, string] => [`bank.${i}`, `Kont ${i + 1}`])],
+  ];
+}
+function sitePairs(): [string, string][] {
+  return Object.entries(state.site)
+    .filter(([k]) => !/\.(lat|lon)$/.test(k))
+    .map(([k, v]): [string, string] => [String(getPath(base.site, k) ?? ''), v])
+    .filter(([o, v]) => o && o !== v)
+    .sort((a, b) => b[0].length - a[0].length);
+}
+const swap = (text: string, pairs: [string, string][]) => pairs.reduce((t, [o, n]) => t.split(o).join(n), text);
+function swapHref(h: string, pairs: [string, string][]): string {
+  for (const [o, n] of pairs) {
+    if (h === o) return n;
+    if (h === `mailto:${o}` || h.startsWith(`mailto:${o}?`)) return `mailto:${n}${h.slice(7 + o.length)}`;
+  }
+  return h;
+}
+const SITE_SCOPES = '.shorts, .menu-sub, .hall-map, [data-live], body[data-path="/kontakt/"] main .prose, body[data-path="/impressum/"] main .prose';
+const textNodes = new Map<Text, string>();
+const osm = (lat: number, lon: number) => `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.006}%2C${lat - 0.0028}%2C${lon + 0.006}%2C${lat + 0.0028}&layer=mapnik&marker=${lat}%2C${lon}`;
+
 function render() {
+  // ohne Grunddaten (data.json nicht geladen) nichts neu zeichnen, sonst wären die Bausteine leer
+  if (!base.teams.length && !state.teams) return;
   const t = teams(), p = partners(), n = news();
   for (const el of $$('[data-render]')) {
     const kind = el.dataset.render;
-    if (kind === 'teams') el.innerHTML = teamsGrid(t, lang);
-    else if (kind === 'trainings') el.innerHTML = trainingCards(t, lang);
-    else if (kind === 'partners-main') el.innerHTML = partnerPatches(p, 'main');
-    else if (kind === 'partners-rest') el.innerHTML = partnerPatches(p, 'partner');
-    else if (kind === 'news-slides') el.innerHTML = newsSlides(n, lang);
+    if (kind === 'teams') el.innerHTML = fix(teamsGrid(t, lang));
+    else if (kind === 'trainings') el.innerHTML = fix(trainingCards(t, lang));
+    else if (kind === 'partners-main') el.innerHTML = fix(partnerPatches(p, 'main'));
+    else if (kind === 'partners-rest') el.innerHTML = fix(partnerPatches(p, 'partner'));
+    else if (kind === 'news-slides') el.innerHTML = fix(newsSlides(n, lang));
     else if (kind === 'news-index') {
       const cat = el.dataset.cat;
-      el.innerHTML = newsList(n.filter((x) => (cat ? x.category === cat || (x.category === 'neu' && cat === 'hb-péiteng') : x.category !== 'archiv')), lang);
+      el.innerHTML = fix(newsList(n.filter((x) => (cat ? x.category === cat || (x.category === 'neu' && cat === 'hb-péiteng') : x.category !== 'archiv')), lang));
     } else if (kind === 'team-panel') {
       const team = t.find((x) => x.id === el.dataset.teamId);
-      if (team) el.outerHTML = teamPanel(team, lang, el.classList.contains('is-compact'));
+      if (team) el.outerHTML = fix(teamPanel(team, lang, el.classList.contains('is-compact')));
     } else if (kind === 'news-draft') {
       const id = decodeURIComponent(location.hash.slice(1));
       const item = n.find((x) => x.id === id);
       el.innerHTML = item
-        ? `${item.image ? `<figure><img src="${esc(storage.imageUrl(item.image))}" alt=""></figure>` : ''}<h2>${esc(item.title)}</h2>${item.date ? `<p><time>${esc(item.date)}</time></p>` : ''}${showUrls(item.html || `<p>${esc(item.excerpt)}</p>`)}`
+        ? fix(`${item.image ? `<figure><img src="${esc(storage.imageUrl(item.image))}" alt=""></figure>` : ''}<h2>${esc(item.title)}</h2>${item.date ? `<p><time>${esc(item.date)}</time></p>` : ''}${showUrls(item.html || `<p>${esc(item.excerpt)}</p>`)}`)
         : '<p>Dëse Beitrag gëtt et net (méi).</p>';
     }
   }
+  // Klassement-Ligen (FLH-Liga-Nummer der Equippen) und eigene Matcher an die Spiele-Anzeige melden
+  const tablesEl = $('[data-tables]');
+  if (tablesEl) tablesEl.dataset.classes = JSON.stringify(t.filter((x) => x.flhClass && MAIN_TABLE_TEAMS.includes(x.flh ?? '')).map((x) => ({ team: x.flh, classId: x.flhClass })));
+  clearTimeout(dataTimer);
+  dataTimer = window.setTimeout(() => dispatchEvent(new CustomEvent('hbp:data', { detail: { matches: ownMatches() } })), 400);
   // Fotos in den Bausteinen (idb: → Blob-Adresse)
   for (const img of $$<HTMLImageElement>('[data-render] img')) {
     const s = img.getAttribute('src') || '';
@@ -96,6 +163,24 @@ function apply() {
     img.src = p ? storage.imageUrl(p) : img.dataset.orig!;
   }
   render();
+  remember();
+  const pairs = sitePairs();
+  for (const [node, orig] of textNodes) { const v = swap(orig, pairs); if (node.data !== v) node.data = v; }
+  for (const a of $$<HTMLAnchorElement>('a[data-orig-href]')) {
+    const o = a.dataset.origHref!;
+    const v = state.links[o] ?? swapHref(o, pairs);
+    if (a.getAttribute('href') !== v) a.setAttribute('href', v);
+  }
+  // Hallen-Karten: neue Koordinaten
+  for (const sec of $$('.hall-map[data-hall]')) {
+    const i = ((base.site as { halls?: { id: string }[] }).halls ?? []).findIndex((h) => h.id === sec.dataset.hall);
+    const frame = $<HTMLIFrameElement>('iframe', sec);
+    if (i < 0 || !frame) continue;
+    frame.dataset.orig ??= frame.src;
+    const lat = state.site[`halls.${i}.lat`], lon = state.site[`halls.${i}.lon`];
+    const src = lat || lon ? osm(Number(lat ?? getPath(base.site, `halls.${i}.lat`)), Number(lon ?? getPath(base.site, `halls.${i}.lon`))) : frame.dataset.orig;
+    if (frame.src !== src) frame.src = src;
+  }
 }
 
 /* ---------------- Änderungen merken ---------------- */
@@ -165,6 +250,12 @@ document.addEventListener('click', (ev) => {
     ev.stopPropagation();
     return pickPhoto(img);
   }
+  const link = el.closest<HTMLAnchorElement>('a[data-orig-href]');
+  if (link && link.closest('main, .shorts') && !link.closest('[contenteditable], [data-render]')) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    return pickLink(link);
+  }
   if (el.closest('main a') && (el.closest('[contenteditable]') || el.closest('[data-render]'))) ev.preventDefault();
 }, true);
 
@@ -229,6 +320,22 @@ async function pickPhoto(img: HTMLImageElement) {
   } else if (action === 'orig' && !inHtml) {
     beforeChange(); delete state.photos[img.dataset.orig!]; apply(); changed(false);
   }
+}
+
+/* Link ändern: neue Adresse für diesen Link (gilt für alle Links mit derselben Original-Adresse) */
+async function pickLink(a: HTMLAnchorElement) {
+  const orig = a.dataset.origHref!;
+  const action = await menu(a, [['edit', 'Link änneren'], ['orig', 'Original-Link'], ['open', 'Link opmaachen']]);
+  if (action === 'open') return void window.open(a.href, '_blank', 'noopener');
+  if (action === 'edit') {
+    const v = prompt('Neien Link (z. B. https://… , mailto:… oder /club/):', a.getAttribute('href') ?? '');
+    if (v === null) return;
+    beforeChange();
+    if (!v.trim() || v.trim() === orig) delete state.links[orig]; else state.links[orig] = v.trim();
+  } else if (action === 'orig') { beforeChange(); delete state.links[orig]; } else return;
+  apply();
+  changed(false);
+  toast('Link geännert. Net vergiessen ze späicheren.');
 }
 
 /* Kleines Auswahlmenü an einer Stelle */
@@ -373,7 +480,8 @@ function help() {
     <ol class="hbp-help">
       <li><b>Beaarbechten</b> drécken. Dann en Text uklicken an tippen. Bei Säitentexter erschéngt eng kleng Leescht fir Fett, Iwwerschrëft, Lëscht, Link a Foto.</li>
       <li><b>Fotoen</b>: am Beaarbechte-Modus e Foto uklicken → anert Foto wielen, verstoppen oder Original.</li>
-      <li><b>Verwalten</b>: Equippen (Nummer, Trainer, Trainingszäiten), Neiegkeeten a Partner.</li>
+      <li><b>Linken</b>: am Beaarbechte-Modus e Link uklicken → neien Link, Original oder opmaachen.</li>
+      <li><b>Verwalten</b>: Equippen (Numm, Trikotnummer, Joergäng, Trainer, Trainingszäiten mat Hal, FLH-Liga fir de Klassement), eegen Matcher, Neiegkeeten, Partner a Club (Adressen, E-Mailen, Hallen, Linken, Bank).</li>
       <li><b>Späicheren</b> net vergiessen. <b>Réckgängeg</b> mécht de leschte Schrëtt zréck.</li>
       <li>Sprooch wiesselen: uewen LB · FR · DE. All Sprooch huet hir eegen Texter.</li>
     </ol>`);
@@ -382,7 +490,7 @@ function help() {
 
 /* ---------------- Verwalten: Equippen, Neiegkeeten, Partner ---------------- */
 let panel: HTMLDialogElement | null = null;
-let tab: 'teams' | 'news' | 'partners' = 'teams';
+let tab: 'teams' | 'matches' | 'news' | 'partners' | 'club' = 'teams';
 let openItem: string | null = null;
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
@@ -413,7 +521,7 @@ const field = (label: string, name: string, value: string, attrs = '') =>
 function drawPanel() {
   if (!panel) return;
   const body = $('.hbp-dialog-body', panel)!;
-  const tabs = `<div class="hbp-tabs" role="tablist">${([['teams', 'Equippen'], ['news', 'Neiegkeeten'], ['partners', 'Partner']] as const)
+  const tabs = `<div class="hbp-tabs" role="tablist">${([['teams', 'Equippen'], ['matches', 'Matcher'], ['news', 'Neiegkeeten'], ['partners', 'Partner'], ['club', 'Club']] as const)
     .map(([id, l]) => `<button type="button" role="tab" data-tab="${id}" aria-selected="${tab === id}">${l}</button>`).join('')}</div>`;
   let html = '';
   if (tab === 'teams') {
@@ -425,6 +533,7 @@ function drawPanel() {
           <div class="hbp-grid3">${field('Numm LB', 'name.lb', t.name.lb)}${field('Numm FR', 'name.fr', t.name.fr)}${field('Numm DE', 'name.de', t.name.de)}</div>
           <div class="hbp-grid3">${field('Trikotnummer', 'nr', t.nr, 'maxlength="3"')}${field('Joergäng', 'years', t.years)}<label class="hbp-field"><span>Grupp</span><select name="group"><option value="seniors"${t.group === 'seniors' ? ' selected' : ''}>Senioren</option><option value="youth"${t.group === 'youth' ? ' selected' : ''}>Jugend</option></select></label></div>
           ${field('Trainer', 'coach', t.coach)}${field('Championnat / Info', 'league', t.league)}
+          <div class="hbp-grid3">${field('FLH-Numm', 'flh', t.flh ?? '', 'placeholder="Hären 1" title="Esou wéi d’Equipe an de FLH-Matcher heescht"')}${field('FLH-Liga-Nr. (Klassement)', 'flhClass', t.flhClass ?? '', 'inputmode="numeric" title="All Saison nei: Nummer vun der Liga op flh.lu (lId=…)"')}${field('Säit (Adress)', 'page', t.page, 'placeholder="/hären-i/"')}</div>
           <fieldset><legend>Trainingszäiten</legend>${t.training.map((r, j) => `<div class="hbp-train" data-row="${j}">
             <select name="day" aria-label="Dag">${DAYS.map((d) => `<option value="${d}"${r.day === d ? ' selected' : ''}>${UI.lb[('day.' + d) as 'day.mon']}</option>`).join('')}</select>
             <input name="time" value="${esc(r.time)}" aria-label="Auerzäit" placeholder="17:30 – 19:00">
@@ -438,12 +547,12 @@ function drawPanel() {
   if (tab === 'partners') {
     html = `<p class="hbp-hint">Partner erschéngen als Patches op der Startsäit (Haaptpartner och am Ärmel uewen).</p><ul class="hbp-list hbp-partners">${partners().map((p, i) => `
       <li class="${openItem === p.id ? 'is-open' : ''}${p.hidden ? ' is-hidden' : ''}">
-        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${p.id}"><img src="${esc(storage.imageUrl(p.logo))}" alt="">${esc(p.name || 'Partner ouni Numm')}${p.tier === 'main' ? ' <em>Haaptpartner</em>' : ''}${p.hidden ? ' <em>(verstoppt)</em>' : ''}</button>
+        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${p.id}"><img src="${esc(withBase(storage.imageUrl(p.logo)))}" alt="">${esc(p.name || 'Partner ouni Numm')}${p.tier === 'main' ? ' <em>Haaptpartner</em>' : ''}${p.hidden ? ' <em>(verstoppt)</em>' : ''}</button>
         <span class="hbp-move"><button type="button" data-move="${i}" data-dir="-1" aria-label="Erop">↑</button><button type="button" data-move="${i}" data-dir="1" aria-label="Erof">↓</button></span></div>
         ${openItem === p.id ? `<div class="hbp-form" data-partner="${i}">
           ${field('Numm', 'name', p.name)}${field('Websäit', 'url', p.url, 'type="url" placeholder="https://"')}
           <label class="hbp-field"><span>Kategorie</span><select name="tier"><option value="main"${p.tier === 'main' ? ' selected' : ''}>Haaptpartner</option><option value="partner"${p.tier === 'partner' ? ' selected' : ''}>Partner</option></select></label>
-          <div class="hbp-actions"><button type="button" data-logo>Logo ersetzen</button><label><input type="checkbox" name="hidden"${p.hidden ? ' checked' : ''}> Verstoppen</label><button type="button" class="hbp-danger" data-del="partner">Läschen</button></div>
+          <div class="hbp-actions"><button type="button" data-logo>Logo ersetzen</button><label><input type="checkbox" name="dark"${p.dark ? ' checked' : ''}> Logo op donkelem Grond</label><label><input type="checkbox" name="hidden"${p.hidden ? ' checked' : ''}> Verstoppen</label><button type="button" class="hbp-danger" data-del="partner">Läschen</button></div>
         </div>` : ''}
       </li>`).join('')}</ul><button type="button" class="hbp-add is-big" data-new="partner">+ Neie Partner</button>`;
   }
@@ -455,9 +564,26 @@ function drawPanel() {
           ${field('Titel', 'title', n.title)}
           <div class="hbp-grid3">${field('Datum', 'date', n.date, 'type="date"')}<div class="hbp-field"><span>Foto</span><button type="button" data-newsimg>${n.image ? 'Foto ersetzen' : 'Foto derbäi'}</button></div></div>
           ${n.category === 'neu' ? `<label class="hbp-field"><span>Text (eidel Zeil = neien Abschnitt)</span><textarea name="text" rows="8">${esc((n.html || '').replace(/<\/p>\s*<p>/g, '\n\n').replace(/<[^>]+>/g, ''))}</textarea></label>` : field('Kuerztext', 'excerpt', n.excerpt)}
-          <div class="hbp-actions">${n.path ? `<a href="${esc(href(lang, n.path))}" target="_blank">Säit opmaachen</a>` : `<a href="${esc(href(lang, '/noriichten-1/neu/'))}#${encodeURIComponent(n.id)}" target="_blank">Virschau</a>`}<label><input type="checkbox" name="hidden"${n.hidden ? ' checked' : ''}> Verstoppen</label>${n.category === 'neu' ? '<button type="button" class="hbp-danger" data-del="news">Läschen</button>' : ''}</div>
+          <div class="hbp-actions">${n.path ? `<a href="${esc(withBase(href(lang, n.path)))}" target="_blank">Säit opmaachen</a>` : `<a href="${esc(withBase(href(lang, '/noriichten-1/neu/')))}#${encodeURIComponent(n.id)}" target="_blank">Virschau</a>`}<label><input type="checkbox" name="hidden"${n.hidden ? ' checked' : ''}> Verstoppen</label>${n.category === 'neu' ? '<button type="button" class="hbp-danger" data-del="news">Läschen</button>' : ''}</div>
         </div>` : ''}
       </li>`).join('')}</ul>`;
+  }
+  if (tab === 'matches') {
+    const flhTeams = teams().filter((t) => !t.hidden && t.flh);
+    const teamName = (flh: string) => flhTeams.find((t) => t.flh === flh)?.name.lb ?? flh;
+    html = `<p class="hbp-hint">Championnat- a Coupe-Matcher kommen automatesch vun der FLH. Hei setzt een eegen Matcher derbäi (Frëndschaftsmatch, Turnéier, Coupe …). Si stinn dann op der Startsäit an op der Säit vun der Equipe; mat Tore gëtt et e Resultat.</p><button type="button" class="hbp-add is-big" data-new="match">+ Neie Match</button><ul class="hbp-list">${state.matches.map((m, i) => `
+      <li class="${openItem === m.id ? 'is-open' : ''}${m.hidden ? ' is-hidden' : ''}">
+        <div class="hbp-row"><button type="button" class="hbp-open" data-open="${esc(m.id)}">${esc(teamName(m.team))} – ${esc(m.opponent || 'Géigner?')}${m.hidden ? ' <em>(verstoppt)</em>' : ''}<small>${esc(m.date)} ${esc(m.time)}</small></button></div>
+        ${openItem === m.id ? `<div class="hbp-form" data-match="${i}">
+          <div class="hbp-grid3"><label class="hbp-field"><span>Equipe</span><select name="team">${flhTeams.map((t) => `<option value="${esc(t.flh!)}"${m.team === t.flh ? ' selected' : ''}>${esc(t.name.lb)}</option>`).join('')}</select></label>${field('Datum', 'date', m.date, 'type="date"')}${field('Auerzäit', 'time', m.time, 'placeholder="18:00"')}</div>
+          <div class="hbp-grid3"><label class="hbp-field"><span>Wou</span><select name="isHome"><option value="1"${m.isHome ? ' selected' : ''}>Doheem</option><option value="0"${!m.isHome ? ' selected' : ''}>Auswäerts</option></select></label>${field('Géigner', 'opponent', m.opponent)}${field('Wat fir e Match', 'competition', m.competition, 'placeholder="Frëndschaftsmatch"')}</div>
+          <div class="hbp-grid3">${field('Hal', 'hall', m.hall)}${field('Uertschaft', 'town', m.town)}<div class="hbp-field"><span>Resultat (Péiteng : Géigner)</span><span class="hbp-score"><input name="ours" value="${esc(m.ours)}" inputmode="numeric" aria-label="Tore Péiteng"> : <input name="theirs" value="${esc(m.theirs)}" inputmode="numeric" aria-label="Tore Géigner"></span></div></div>
+          <div class="hbp-actions"><label><input type="checkbox" name="hidden"${m.hidden ? ' checked' : ''}> Verstoppen</label><button type="button" class="hbp-danger" data-del="match">Läschen</button></div>
+        </div>` : ''}
+      </li>`).join('')}</ul>`;
+  }
+  if (tab === 'club') {
+    html = `<p class="hbp-hint">Dës Donnéeë stinn ënnen op all Säit, am Menü ënner Kontakt, op der Kontakt- an Impressum-Säit an op de Säite vun de Sportshalen. Eidel loossen = Original.</p>${siteFields().map(([title, fields]) => `<fieldset class="hbp-form" data-site><legend>${esc(title)}</legend>${fields.map(([k, label]) => field(label, k, state.site[k] ?? String(getPath(base.site, k) ?? ''))).join('')}</fieldset>`).join('')}`;
   }
   const scroll = body.scrollTop;
   body.innerHTML = tabs + html;
@@ -483,6 +609,17 @@ function onPanelInput(ev: Event) {
     else (t as unknown as Record<string, unknown>)[input.name] = val;
   }
   if (form.dataset.partner) (editList<Partner>('partners')[+form.dataset.partner] as unknown as Record<string, unknown>)[input.name] = val;
+  if (form.dataset.match) {
+    const m = state.matches[+form.dataset.match] as unknown as Record<string, unknown>;
+    m[input.name] = input.name === 'isHome' ? val === '1' : val;
+  }
+  if (form.dataset.site !== undefined) {
+    const orig = String(getPath(base.site, input.name) ?? '');
+    if (String(val) === orig || String(val) === '') delete state.site[input.name]; else state.site[input.name] = String(val);
+    apply();
+    changed(false);
+    return;
+  }
   if (form.dataset.news) {
     const n = editList<NewsItem>('news')[+form.dataset.news];
     if (input.name === 'text') {
@@ -504,7 +641,7 @@ async function onPanelClick(ev: Event) {
   const listKey = tab;
   if (b.dataset.move) {
     beforeChange();
-    const list = editList<unknown>(listKey), i = +b.dataset.move, j = i + +b.dataset.dir!;
+    const list = editList<unknown>(listKey as 'teams' | 'partners' | 'news'), i = +b.dataset.move, j = i + +b.dataset.dir!;
     if (j < 0 || j >= list.length) return;
     [list[i], list[j]] = [list[j], list[i]];
     render(); changed(false); return drawPanel();
@@ -519,6 +656,7 @@ async function onPanelClick(ev: Event) {
       editList<Partner>('partners').push({ id, name: '', logo, url: '', tier: 'partner' });
     }
     if (b.dataset.new === 'news') editList<NewsItem>('news').unshift({ id, title: 'Neie Beitrag', date: new Date().toISOString().slice(0, 10), path: '', image: '', excerpt: '', category: 'neu', html: '' });
+    if (b.dataset.new === 'match') state.matches.unshift({ id, team: teams().find((t) => !t.hidden && t.flh)?.flh ?? '', date: new Date().toISOString().slice(0, 10), time: '', isHome: true, opponent: '', hall: 'Centre sportif Bim Diederich', town: 'Péiteng', ours: '', theirs: '', competition: '' });
     openItem = id;
     render(); changed(false); return drawPanel();
   }
@@ -533,8 +671,8 @@ async function onPanelClick(ev: Event) {
   if (b.dataset.del) {
     if (!confirm('Wierklech läschen?')) return;
     beforeChange();
-    const idx = +(form.dataset.team ?? form.dataset.partner ?? form.dataset.news)!;
-    editList<unknown>(listKey).splice(idx, 1);
+    if (form.dataset.match) state.matches.splice(+form.dataset.match, 1);
+    else editList<unknown>(listKey as 'teams' | 'partners' | 'news').splice(+(form.dataset.team ?? form.dataset.partner ?? form.dataset.news)!, 1);
     openItem = null;
     render(); changed(false); return drawPanel();
   }
@@ -593,8 +731,8 @@ function toast(msg: string, error = false) {
 export async function start(wantLogin = false) {
   if (!started) {
     started = true;
-    try { base = await fetch('/data.json').then((r) => r.json()); } catch { /* Bausteine bleiben wie gebaut */ }
-    state = (await storage.loadContent()) ?? emptyState();
+    try { base = { ...base, ...(await fetch(`${BASE}data.json`).then((r) => r.json())) }; } catch { /* Bausteine bleiben wie gebaut */ }
+    state = normalize(await storage.loadContent());
     await preloadImages(state);
     savedJson = JSON.stringify(state);
     apply();
