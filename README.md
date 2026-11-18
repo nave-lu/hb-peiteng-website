@@ -60,3 +60,11 @@ Besucher laden nur `src/edit/boot.ts`; der Editor kommt erst nach dem Login.
 
 Astro 7, statisch, ohne Framework im Browser. Schriften selbst gehostet (`public/fonts/`, OFL): Big Shoulders Display, Barlow, Barlow Condensed.
 Bausteine, die Seite und Editor teilen (Trikot, Patches, News): `src/lib/render.ts`.
+
+## Online stellen (GitHub Pages)
+
+```bash
+npm run deploy
+```
+
+Baut die Seite, stellt alle Pfade auf `/hb-peiteng-website/` um (`scripts/pages-base.mjs`) und lädt das Ergebnis in den Branch `gh-pages`. Adresse: https://xjamie007.github.io/hb-peiteng-website/ — mit eigener Domain fällt die Pfad-Umstellung weg.
