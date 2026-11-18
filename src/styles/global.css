@@ -114,6 +114,7 @@ h1, h2, h3, h4 { font-family: var(--display); font-weight: 800; line-height: 0.9
 .menu-sub a { display: block; padding: 8px 0; text-decoration: none; font-family: var(--cond); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; font-size: 1.25rem; line-height: 1.15; }
 .menu-sub a:hover, .menu-sub a[aria-current] { text-decoration: underline; text-decoration-thickness: 3px; }
 .menu-sub .is-sub a { padding-left: 16px; opacity: 0.8; }
+.menu-sub a[href^='mailto:'] { text-transform: none; letter-spacing: 0; }
 .menu-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin-top: 32px; }
 .menu .lang { display: flex; gap: 4px; }
 .menu .lang a { font-family: var(--cond); font-weight: 700; font-size: 1.1rem; text-decoration: none; padding: 8px 12px; border-radius: 3px; border: 2px solid var(--ink); }
@@ -141,6 +142,8 @@ h1, h2, h3, h4 { font-family: var(--display); font-weight: 800; line-height: 0.9
   .menu[data-open] { animation: menu-in 0.45s var(--ease); }
   .menu-item.is-active .menu-sub { animation: rise 0.4s var(--ease); }
   @keyframes menu-in { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+  .menu.is-closing { animation: menu-out 0.45s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  @keyframes menu-out { from { clip-path: inset(0); } to { clip-path: inset(0 0 100% 0); } }
 }
 
 /* ---------- Startseite: erster Bildschirm, nur der Name in der Mitte ---------- */

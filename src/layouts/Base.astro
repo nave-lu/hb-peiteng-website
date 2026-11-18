@@ -65,7 +65,20 @@ const joinPath = '/club/gëff-handballspiller-inn/';
               </ul>
             </li>
           ))}
-          <li class="menu-item"><a class="menu-sec" href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined}>{t(lang, 'nav.contact')}</a></li>
+          {/* Kontakt wie die anderen Rubriken: rechts (Handy: aufklappen) Kontaktseite, E-Mails, Hallen, Partner werden */}
+          <li class="menu-item" data-current={path === '/kontakt/' ? '' : undefined}>
+            <div class="menu-row">
+              <a class="menu-sec" href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined}>{t(lang, 'nav.contact')}</a>
+              <button class="menu-toggle" type="button" aria-expanded="false" aria-label={t(lang, 'nav.contact')}><span aria-hidden="true"></span></button>
+            </div>
+            <ul class="menu-sub">
+              <li><a href={href(lang, '/kontakt/')}>{t(lang, 'contact.title')}</a></li>
+              <li><a href={`mailto:${site.emails.club}`}>{site.emails.club}</a></li>
+              <li><a href={`mailto:${site.emails.president}`}>{site.emails.president}</a></li>
+              <li><a href={href(lang, '/club/sportshalen/')}>{t(lang, 'footer.halls')}</a></li>
+              <li><a href={href(lang, '/kontakt/') + '#partner'}>{t(lang, 'partner.become')}</a></li>
+            </ul>
+          </li>
         </ul>
       </nav>
       <div class="menu-foot">

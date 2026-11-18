@@ -20,12 +20,23 @@ items.forEach((li) => {
   li.addEventListener('pointerenter', (e) => { if (wide.matches && e.pointerType === 'mouse') activate(li); });
   li.addEventListener('focusin', () => { if (wide.matches) activate(li); });
 });
+let closing = 0;
 function setMenu(open: boolean) {
   if (!menuBtn || !menu) return;
   menuBtn.setAttribute('aria-expanded', String(open));
   menuBtn.setAttribute('aria-label', (open ? menuBtn.dataset.closeLabel : menuBtn.dataset.openLabel) ?? '');
-  menu.toggleAttribute('data-open', open);
-  document.documentElement.style.overflow = open ? 'hidden' : '';
+  clearTimeout(closing);
+  const finish = () => {
+    clearTimeout(closing);
+    menu.classList.remove('is-closing');
+    menu.toggleAttribute('data-open', open);
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+  };
+  // Schließen spielt die Öffnen-Animation rückwärts (nach oben einrollen), dann erst ausblenden
+  if (!open && menu.hasAttribute('data-open') && !reduced) {
+    menu.classList.add('is-closing');
+    closing = window.setTimeout(finish, 450);
+  } else finish();
   if (open) {
     // breit: aktuelle (sonst erste) Rubrik ist schon offen; schmal: alles zu
     activate(wide.matches ? items.find((x) => x.hasAttribute('data-current')) ?? items[0] : null);
@@ -314,8 +325,8 @@ if (!reduced && 'IntersectionObserver' in window) {
     if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
   }), { rootMargin: '0px 0px -8% 0px' });
   document.querySelectorAll('.reveal').forEach((el) => { el.classList.add('will-reveal'); io.observe(el); });
-  // Rasters (Trikoten, Partner, Neiegkeeten) kommen nacheinander
-  document.querySelectorAll<HTMLElement>('.rack, .patches, .news-index').forEach((el) => {
+  // Raster (Trikoten, Neiegkeeten) kommen nacheinander; Partner-Logos nicht, die sollen sofort da sein
+  document.querySelectorAll<HTMLElement>('.rack, .news-index').forEach((el) => {
     [...el.children].forEach((c, i) => (c as HTMLElement).style.setProperty('--i', String(Math.min(i, 12))));
     el.classList.add('stagger');
     io.observe(el);
