@@ -41,7 +41,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--collar) + 16px); scrollbar-color: var(--ink) var(--yellow); }
+html { -webkit-text-size-adjust: 100%;  scrollbar-color: var(--ink) var(--yellow); }
 body {
   margin: 0;
   font: 400 1.0625rem/1.55 var(--body);
@@ -668,6 +668,10 @@ svg .collar { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: r
 .archive-groups li span { flex: none; font-family: var(--cond); font-weight: 700; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 @media (max-width: 1080px) { .archive-groups { grid-template-columns: minmax(0, 1fr); } }
 
+/* Sprungmarken (z. B. „Matcher“ oben auf der Startseite): Ziel ohne Einblende-Effekt, sofort fertig */
+.is-instant, .is-instant * { transition: none !important; animation: none !important; }
+.tables { scroll-margin-top: 32px; }
+
 /* ---------- Bewegung ---------- */
 @media (prefers-reduced-motion: no-preference) {
   .intro-in > * { animation: rise 0.9s var(--ease) both; }
@@ -686,8 +690,6 @@ svg .collar { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: r
   @supports (animation-timeline: scroll()) {
     .intro-title { animation: drift linear both; animation-timeline: scroll(root); animation-range: 0 90vh; }
     @keyframes drift { to { transform: translateY(16vh) scale(0.94); opacity: 0.3; } }
-    .section-head h2 { animation: grow linear both; animation-timeline: view(); animation-range: entry 0% cover 35%; }
-    @keyframes grow { from { letter-spacing: 0.04em; opacity: 0.2; } to { letter-spacing: -0.01em; opacity: 1; } }
   }
 }
 @media (prefers-reduced-motion: reduce) {

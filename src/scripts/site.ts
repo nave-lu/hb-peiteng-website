@@ -280,6 +280,34 @@ lb?.addEventListener('keydown', (ev) => {
 });
 lb?.addEventListener('click', (ev) => { if (ev.target === lb) lb.close(); });
 
+/* ---------- Sprungmarken: Ziel sofort fertig zeigen und genau oben halten ---------- */
+// Spiele, Fotos und Schriften laden nach dem Sprung noch nach und verschieben die Seite;
+// deshalb kurz nachjustieren, bis man selbst scrollt (höchstens 4 Sekunden).
+function jumpTo(id: string): boolean {
+  const target = document.getElementById(id);
+  if (!target) return false;
+  const sec = target.closest('section') ?? target;
+  sec.classList.add('is-instant');
+  [sec, ...sec.querySelectorAll('.reveal, .stagger')].forEach((el) => el.classList.add('is-in'));
+  setTimeout(() => sec.classList.remove('is-instant'), 200);
+  const align = () => target.scrollIntoView({ block: 'start' });
+  align();
+  let done = false;
+  const ro = new ResizeObserver(() => { if (!done) align(); });
+  const quit = () => { done = true; ro.disconnect(); };
+  ro.observe(document.body);
+  ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach((e) => addEventListener(e, quit, { once: true, passive: true }));
+  setTimeout(quit, 4000);
+  return true;
+}
+document.addEventListener('click', (ev) => {
+  const a = (ev.target as Element).closest?.<HTMLAnchorElement>('a[href^="#"]');
+  if (!a || a.hasAttribute('data-login') || a.hash.length < 2) return;
+  const id = decodeURIComponent(a.hash.slice(1));
+  if (jumpTo(id)) { ev.preventDefault(); history.pushState(null, '', `#${id}`); }
+});
+if (location.hash.length > 1) addEventListener('load', () => jumpTo(decodeURIComponent(location.hash.slice(1))));
+
 /* ---------- Sanftes Einblenden beim Scrollen (einmal pro Element) ---------- */
 if (!reduced && 'IntersectionObserver' in window) {
   const io = new IntersectionObserver((entries) => entries.forEach((en) => {

@@ -151,9 +151,9 @@ const LOCALE = { lb: 'lb-LU', fr: 'fr-LU', de: 'de-LU' } as const;
 export const flhLeague = (classId: string) => `https://www.flh.lu/championnat#/league?ogId=95&lId=${encodeURIComponent(classId)}`;
 const flhLink = (classId: string, label: string) => `<a class="flh-link" href="${flhLeague(classId)}" target="_blank" rel="noopener">${label}</a>`;
 const L = {
-  lb: { season: 'Ganz Saison op flh.lu', date: 'Datum', homeTeam: 'Heemequipe', guestTeam: 'Gaascht', noGames: 'D’FLH huet fir dës Equipe nach keng Matcher ugesat.', home: 'Doheem', away: 'Auswäerts', result: 'Resultat', none: 'Dës Woch sinn keng Matcher ugesat.', cols: ['Equipe', 'M', 'G', 'U', 'V', 'Goaler', 'Pt'] },
-  fr: { season: 'Toute la saison sur flh.lu', date: 'Date', homeTeam: 'Domicile', guestTeam: 'Visiteur', noGames: 'La FLH n’a pas encore programmé de match pour cette équipe.', home: 'À domicile', away: 'À l’extérieur', result: 'Résultat', none: 'Pas de match prévu cette semaine.', cols: ['Équipe', 'J', 'G', 'N', 'P', 'Buts', 'Pts'] },
-  de: { season: 'Ganze Saison auf flh.lu', date: 'Datum', homeTeam: 'Heim', guestTeam: 'Gast', noGames: 'Die FLH hat für diese Mannschaft noch keine Spiele angesetzt.', home: 'Heim', away: 'Auswärts', result: 'Ergebnis', none: 'Diese Woche sind keine Spiele angesetzt.', cols: ['Team', 'Sp', 'S', 'U', 'N', 'Tore', 'Pkt'] },
+  lb: { next: 'Nächst Matcher', season: 'Ganz Saison op flh.lu', date: 'Datum', homeTeam: 'Heemequipe', guestTeam: 'Gaascht', noGames: 'D’FLH huet fir dës Equipe nach keng Matcher ugesat.', home: 'Doheem', away: 'Auswäerts', result: 'Resultat', none: 'Dës Woch sinn keng Matcher ugesat.', cols: ['Equipe', 'M', 'G', 'U', 'V', 'Goaler', 'Pt'] },
+  fr: { next: 'Prochains matchs', season: 'Toute la saison sur flh.lu', date: 'Date', homeTeam: 'Domicile', guestTeam: 'Visiteur', noGames: 'La FLH n’a pas encore programmé de match pour cette équipe.', home: 'À domicile', away: 'À l’extérieur', result: 'Résultat', none: 'Pas de match prévu cette semaine.', cols: ['Équipe', 'J', 'G', 'N', 'P', 'Buts', 'Pts'] },
+  de: { next: 'Nächste Spiele', season: 'Ganze Saison auf flh.lu', date: 'Datum', homeTeam: 'Heim', guestTeam: 'Gast', noGames: 'Die FLH hat für diese Mannschaft noch keine Spiele angesetzt.', home: 'Heim', away: 'Auswärts', result: 'Ergebnis', none: 'Diese Woche sind keine Spiele angesetzt.', cols: ['Team', 'Sp', 'S', 'U', 'N', 'Tore', 'Pkt'] },
 };
 
 export function matchCards(matches: Match[], lang: Lang): string {
@@ -217,7 +217,13 @@ export const teamMatches = (all: Match[], team: string, mode: LiveMode) =>
 
 /** Block „Resultater + Klassement“ einer Equipe; dieselbe Funktion beim Bauen und im Browser. */
 export function teamLiveHtml(list: Match[], tables: Table[], mode: LiveMode, lang: Lang, h: { results: string; table: string }): string {
-  const res = mode !== 'table' ? `<h2>${e(h.results)}</h2>${resultsHtml(list, lang)}` : '';
+  // nächste Spiele zuerst (eigene Überschrift), darunter die Resultate
+  const played = (m: Match) => m.homeGoals !== '' && m.guestGoals !== '';
+  const today = new Date().toISOString().slice(0, 10);
+  const next = list.filter((m) => !played(m) && m.date >= today);
+  const done = list.filter((m) => !next.includes(m));
+  const res = mode === 'table' ? ''
+    : (next.length ? `<h2>${e(L[lang].next)}</h2>${resultsHtml(next, lang)}` : '') + (done.length || !next.length ? `<h2>${e(h.results)}</h2>${resultsHtml(done, lang)}` : '');
   const tab = mode !== 'cup' && tables.length ? `<h2>${e(h.table)}</h2><div class="tables-light">${tablesHtml(tables, lang)}</div>` : '';
   return mode === 'table' ? tab + res : res + tab;
 }
