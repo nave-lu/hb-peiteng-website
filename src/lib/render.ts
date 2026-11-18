@@ -102,7 +102,8 @@ export function partnerPatches(partners: Partner[], tier?: Partner['tier']): str
   return partners
     .filter((p) => !p.hidden && (!tier || p.tier === tier))
     .map((p) => {
-      const img = `<img src="${e(p.logo)}" alt="${e(p.name || 'Partner')}" loading="lazy">`;
+      // nicht lazy: im laufenden Band und auf der Partnerwand sollen die Logos schon da sein, wenn sie ins Bild kommen
+      const img = `<img src="${e(p.logo)}" alt="${e(p.name || 'Partner')}" decoding="async">`;
       const link = p.url ? `<a href="${e(p.url)}" target="_blank" rel="noopener" title="${e(p.name || p.url)}">${img}</a>` : img;
       return `<li class="print print-${p.tier}${p.dark ? ' is-dark' : ''}" data-partner="${e(p.id)}">${link}</li>`;
     })
@@ -137,7 +138,7 @@ export function newsSlides(items: NewsItem[], lang: Lang, limit = 6): string {
     .filter((n) => !n.hidden && n.image)
     .slice(0, limit)
     .map((n, i) => `<article class="slide" data-news="${e(n.id)}" aria-roledescription="slide" aria-label="${i + 1}">
-  <div class="slide-img" style="--bg:url('${e(n.image)}')"><img src="${e(n.image)}" alt="" ${i ? 'loading="lazy"' : ''}></div>
+  <div class="slide-img" style="--bg:url('${e(n.image)}')"><img src="${e(n.image)}" alt="" decoding="async"></div>
   <div class="slide-body">
     ${n.date ? `<time datetime="${e(n.date)}">${e(fmtDate(n.date, lang))}</time>` : ''}
     <h3>${e(n.title)}</h3>
