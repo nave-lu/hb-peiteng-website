@@ -5,7 +5,7 @@
  * Speichern geht über storage.ts (Demo: dieser Browser; Betrieb: api.php). */
 import './editor.css';
 import { storage, emptyState, preloadImages, type EditState } from './storage';
-import { teamsGrid, teamPanel, youthLabel, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
+import { teamsGrid, teamPanel, trainingCards, partnerPatches, newsList, newsSlides, type NewsItem, type Partner, type Team } from '../lib/render';
 import { UI, LANGS, href, type Lang } from '../i18n/ui';
 
 const lang = (document.body.dataset.lang || 'lb') as Lang;
@@ -50,7 +50,7 @@ function render() {
   for (const el of $$('[data-render]')) {
     const kind = el.dataset.render;
     if (kind === 'teams') el.innerHTML = teamsGrid(t, lang);
-    else if (kind === 'youth-label') el.innerHTML = youthLabel(t, lang);
+    else if (kind === 'trainings') el.innerHTML = trainingCards(t, lang);
     else if (kind === 'partners-main') el.innerHTML = partnerPatches(p, 'main');
     else if (kind === 'partners-rest') el.innerHTML = partnerPatches(p, 'partner');
     else if (kind === 'news-slides') el.innerHTML = newsSlides(n, lang);
@@ -165,7 +165,7 @@ document.addEventListener('click', (ev) => {
     ev.stopPropagation();
     return pickPhoto(img);
   }
-  if (el.closest('main a, .sleeve a') && (el.closest('[contenteditable]') || el.closest('[data-render]'))) ev.preventDefault();
+  if (el.closest('main a') && (el.closest('[contenteditable]') || el.closest('[data-render]'))) ev.preventDefault();
 }, true);
 
 /* Foto wählen, verkleinern, ablegen */

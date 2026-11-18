@@ -5,14 +5,35 @@ import type { Lang } from '../i18n/ui';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const editing = () => document.body.classList.contains('is-editing');
 
-// Menü auf dem Handy
+// Menü über die ganze Seite. Breit: Rubrik antippen/überfahren zeigt rechts ihre Seiten. Schmal: Rubrik klappt auf.
 const menuBtn = document.querySelector<HTMLButtonElement>('.menu-btn');
 const menu = document.getElementById('menu');
-menuBtn?.addEventListener('click', () => {
-  const open = menuBtn.getAttribute('aria-expanded') !== 'true';
+const wide = matchMedia('(min-width: 900px)');
+const items = [...(menu?.querySelectorAll<HTMLElement>('.menu-item') ?? [])];
+const activate = (li: HTMLElement | null) => items.forEach((x) => {
+  x.classList.toggle('is-active', x === li);
+  x.querySelector('.menu-toggle')?.setAttribute('aria-expanded', String(x === li));
+});
+items.forEach((li) => {
+  if (!li.querySelector('.menu-sub')) return;
+  li.querySelector('.menu-toggle')?.addEventListener('click', () => activate(li.classList.contains('is-active') ? null : li));
+  li.addEventListener('pointerenter', (e) => { if (wide.matches && e.pointerType === 'mouse') activate(li); });
+  li.addEventListener('focusin', () => { if (wide.matches) activate(li); });
+});
+function setMenu(open: boolean) {
+  if (!menuBtn || !menu) return;
   menuBtn.setAttribute('aria-expanded', String(open));
-  menu?.toggleAttribute('data-open', open);
-  document.body.style.overflow = open ? 'hidden' : '';
+  menuBtn.setAttribute('aria-label', (open ? menuBtn.dataset.closeLabel : menuBtn.dataset.openLabel) ?? '');
+  menu.toggleAttribute('data-open', open);
+  document.documentElement.style.overflow = open ? 'hidden' : '';
+  if (open) {
+    // breit: aktuelle (sonst erste) Rubrik ist schon offen; schmal: alles zu
+    activate(wide.matches ? items.find((x) => x.hasAttribute('data-current')) ?? items[0] : null);
+  }
+}
+menuBtn?.addEventListener('click', () => setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && menu?.hasAttribute('data-open')) { setMenu(false); menuBtn?.focus(); }
 });
 
 /* ---------- Trikots: antippen → Trikot hebt sich, darunter klappt eine Bahn mit allen Infos auf ---------- */
@@ -69,43 +90,56 @@ document.addEventListener('keydown', (ev) => {
 });
 
 /* ---------- Karussells (Matcher, Neiegkeeten): Wischen nativ, Pfeile, Punkte, Autoplay ---------- */
+/** Karussell einrichten. Darf nach neuem Inhalt (Live-Matcher) erneut aufgerufen werden:
+ *  Klicks werden nur einmal angehängt, danach nur Pfeile/Punkte und Startposition neu. */
 function setupCarousel(root: HTMLElement) {
   const track = root.querySelector<HTMLElement>('.carousel-track');
-  if (!track || root.dataset.ready) return;
+  if (!track) return;
+  const first = !root.dataset.ready;
   root.dataset.ready = '1';
   const items = () => [...track.children] as HTMLElement[];
   const step = () => (items()[0]?.getBoundingClientRect().width ?? track.clientWidth) + (parseFloat(getComputedStyle(track).columnGap) || 0);
-  const go = (dir: number) => {
-    const max = track.scrollWidth - track.clientWidth - 2;
-    const next = dir > 0 && track.scrollLeft >= max ? 0 : dir < 0 && track.scrollLeft <= 2 ? max : track.scrollLeft + dir * step();
-    track.scrollTo({ left: next, behavior: reduced ? 'auto' : 'smooth' });
-  };
-  root.querySelectorAll<HTMLButtonElement>('.car-btn').forEach((b) => b.addEventListener('click', () => { go(+b.dataset.dir!); stop(); }));
+  // Nur die Slideshow (Autoplay) springt am Ende zurück an den Anfang; sonst bleibt „weiter“ immer rechts
+  const loop = root.hasAttribute('data-autoplay');
+  const max = () => track.scrollWidth - track.clientWidth - 2;
+  const btns = [...root.querySelectorAll<HTMLButtonElement>('.car-btn')];
   const dots = root.querySelector('.dots');
   const paint = () => {
+    // am Anfang/Ende den jeweiligen Pfeil ausgrauen
+    if (!loop) btns.forEach((b) => { b.disabled = +b.dataset.dir! < 0 ? track.scrollLeft <= 2 : track.scrollLeft >= max(); });
     if (!dots) return;
     const n = items().length;
     const i = Math.round(track.scrollLeft / Math.max(1, step()));
     if (dots.children.length !== n) dots.innerHTML = '<i></i>'.repeat(n);
     [...dots.children].forEach((d, k) => d.classList.toggle('on', k === Math.min(i, n - 1)));
   };
-  track.addEventListener('scroll', () => requestAnimationFrame(paint), { passive: true });
-  paint();
-  let timer = 0;
-  let stopped = false;
-  const pause = () => { clearInterval(timer); timer = 0; };
-  const stop = () => { stopped = true; pause(); };
-  if (root.hasAttribute('data-autoplay') && !reduced) {
-    // erst weiterblättern, wenn man die Slideshow wirklich sieht; außer Sicht wieder anhalten
-    const play = () => { if (!timer && !stopped) timer = window.setInterval(() => { if (!document.hidden && !editing()) go(1); }, 6000); };
-    new IntersectionObserver(([en]) => (en.intersectionRatio >= 0.6 ? play() : pause()), { threshold: [0, 0.6] }).observe(root);
-    ['pointerdown', 'focusin', 'mouseenter'].forEach((e) => root.addEventListener(e, stop, { once: true }));
+  if (first) {
+    const go = (dir: number) => {
+      const at = track.scrollLeft;
+      const next = loop && dir > 0 && at >= max() ? 0 : loop && dir < 0 && at <= 2 ? max() : Math.min(max() + 2, Math.max(0, at + dir * step()));
+      track.scrollTo({ left: next, behavior: reduced ? 'auto' : 'smooth' });
+    };
+    let timer = 0;
+    let stopped = false;
+    const pause = () => { clearInterval(timer); timer = 0; };
+    const stop = () => { stopped = true; pause(); };
+    btns.forEach((b) => b.addEventListener('click', () => { go(+b.dataset.dir!); stop(); }));
+    track.addEventListener('scroll', () => requestAnimationFrame(paint), { passive: true });
+    // sobald jemand selbst blättert, springt eine Aktualisierung nicht mehr zurück
+    ['pointerdown', 'wheel', 'keydown'].forEach((e) => root.addEventListener(e, () => { root.dataset.moved = '1'; }, { passive: true }));
+    if (loop && !reduced) {
+      // erst weiterblättern, wenn man die Slideshow wirklich sieht; außer Sicht wieder anhalten
+      const play = () => { if (!timer && !stopped) timer = window.setInterval(() => { if (!document.hidden && !editing()) go(1); }, 6000); };
+      new IntersectionObserver(([en]) => (en.intersectionRatio >= 0.6 ? play() : pause()), { threshold: [0, 0.6] }).observe(root);
+      ['pointerdown', 'focusin', 'mouseenter'].forEach((e) => root.addEventListener(e, stop, { once: true }));
+    }
   }
   // Matcher: zum ersten Match ab heute springen (Resultater vun der leschter Woch stinn virdrun)
-  if (track.matches('.matches')) {
+  if (track.matches('.matches') && !root.dataset.moved) {
     const firstUpcoming = items().findIndex((x) => !x.classList.contains('is-played') && !x.classList.contains('is-past'));
-    if (firstUpcoming > 0) track.scrollLeft = items()[firstUpcoming].offsetLeft - track.offsetLeft - 4;
+    track.scrollLeft = firstUpcoming > 0 ? items()[firstUpcoming].offsetLeft - track.offsetLeft - 4 : 0;
   }
+  paint();
 }
 document.querySelectorAll<HTMLElement>('[data-carousel]').forEach(setupCarousel);
 
@@ -125,8 +159,13 @@ async function cached<T>(key: string, fn: () => Promise<T>, ttl = 5 * 60e3): Pro
   try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch { /* egal */ }
   return v;
 }
-const lastWeek = () => new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
-const freshWeeks = () => cached('flh-weeks-v2', async () => [...(await weekGames()), ...(await weekGames(lastWeek()).catch(() => []))]);
+const dayIn = (days: number) => new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
+// letzte, laufende und nächste Woche: drei Anfragen, höchstens alle 5 Minuten pro Besucher
+const freshWeeks = () => cached('flh-weeks-v3', async () => [
+  ...(await weekGames()),
+  ...(await weekGames(dayIn(7)).catch(() => [])),
+  ...(await weekGames(dayIn(-7)).catch(() => [])),
+]);
 const freshTables = (m: Match[]) => cached('flh-tables-v2-' + [...new Set(m.map((x) => x.classId))].sort().join('-'), () => fetchTables(m));
 
 const box = document.querySelector<HTMLElement>('[data-matches]');
@@ -147,9 +186,7 @@ if (box) {
     .then(async (fresh) => {
       const m = windowMatches(mergeMatches(base.matches, fresh));
       box.innerHTML = matchCards(m, lang);
-      const root = box.closest<HTMLElement>('[data-carousel]')!;
-      delete root.dataset.ready;
-      setupCarousel(root);
+      setupCarousel(box.closest<HTMLElement>('[data-carousel]')!);
       paintLive(m);
       // Klassement: nur Hären und Dammen; feste Ligen aus teams.json, falls eine Equipe gerade nicht spielt
       let stubs: { team: string; classId: string }[] = [];
@@ -166,12 +203,16 @@ if (box) {
     })
     .catch(() => { /* Schnappschuss bleibt stehen */ });
   refresh();
-  // während eines Matches alle 2 Minuten (Cache läuft dann kürzer), sonst alle 15 Minuten
-  setInterval(() => {
+  // Automatisch: alle 2 Minuten nachsehen. Der 5-Minuten-Cache bremst die Anfragen an die FLH;
+  // nur während eines laufenden Matches wird er übersprungen (dann wirklich alle 2 Minuten).
+  // Die Wochen rechnen ab heute, rücken also jede Woche von selbst weiter.
+  const tick = () => {
     if (document.hidden) return;
-    if (liveEl?.classList.contains('is-live')) try { sessionStorage.removeItem('flh-weeks-v2'); } catch { /* egal */ }
+    if (liveEl?.classList.contains('is-live')) try { sessionStorage.removeItem('flh-weeks-v3'); } catch { /* egal */ }
     refresh();
-  }, liveEl?.classList.contains('is-live') ? 120000 : 900000);
+  };
+  setInterval(tick, 120000);
+  document.addEventListener('visibilitychange', tick); // zurück im Tab: gleich auffrischen
 }
 
 /* Mannschafts- und Resultat-Seiten: Schnappschuss + laufende Woche */

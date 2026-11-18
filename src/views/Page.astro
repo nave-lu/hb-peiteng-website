@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { t, href, type Lang } from '../i18n/ui';
-import { news, pages, sectionOf, sectionTree, teamsForPage, teamPageHtml, archiveYear, archiveRange, isArchive, childPages, type Page } from '../lib/content';
+import { news, pages, sectionOf, sectionTree, menuLinks, teamsForPage, teamPageHtml, archiveYear, archiveRange, isArchive, childPages, haerenArchive, type Page } from '../lib/content';
 import { wisiCupHtml } from '../lib/wisi';
 import site from '../data/site.json';
 import { partners } from '../lib/content';
@@ -13,7 +13,11 @@ import flh from '../data/flh.json';
 interface Props { lang: Lang; page: Page; extra?: string }
 const { lang, page, extra } = Astro.props;
 const sec = sectionOf(page.path);
-const tree = sectionTree(page.path);
+// Equippen: links nur die Mannschaften (wie im Menü), ohne Kader/Resultater usw. unter Hären I
+const KIND = { fotoen: { lb: 'Fotoen', fr: 'Photos', de: 'Fotos' }, press: { lb: 'Press', fr: 'Presse', de: 'Presse' }, video: { lb: 'Video', fr: 'Vidéo', de: 'Video' } } as const;
+const tree = sec?.key === 'nav.teams' ? menuLinks(sec, lang) : sectionTree(page.path);
+// markiert wird der längste passende Eintrag (z. B. Hären I auch auf /hären-i/kader/)
+const currentPath = tree.filter((p) => page.path.startsWith(p.path)).sort((a, b) => b.path.length - a.path.length)[0]?.path;
 const { team, list: teamList } = teamsForPage(page.path);
 
 // Resultater und Klassement kommen live von der FLH (beim Bauen und bei jedem Besuch), nie mehr von Hand.
@@ -98,7 +102,7 @@ else if (page.path === '/partner/') html = `<h2 class="partner-group">${t(lang, 
             <ul>
               {tree.map((p) => (
                 <li class={`d${Math.min(p.depth, 3)}`}>
-                  <a href={href(lang, p.path)} aria-current={p.path === page.path ? 'page' : undefined}>{p.title}</a>
+                  <a href={href(lang, p.path)} aria-current={p.path === currentPath ? 'page' : undefined}>{p.title}</a>
                 </li>
               ))}
             </ul>
@@ -126,6 +130,23 @@ else if (page.path === '/partner/') html = `<h2 class="partner-group">${t(lang, 
         )}
         {extra && <div set:html={extra} />}
         <div data-edit-html={`page:${page.path}`} set:html={html} />
+        {page.path === '/hären-i/' && (
+          <details class="archive-box">
+            <summary><span class="tag-btn">{t(lang, 'archive.label')}</span><span class="archive-hint">{t(lang, 'archive.hint')}</span></summary>
+            <div class="archive-groups">
+              {haerenArchive().filter((g) => g.items.length).map((g) => (
+                <section>
+                  <h3>{t(lang, g.key)}</h3>
+                  <ul>
+                    {g.items.map((p) => (
+                      <li class={p.depth > 2 && p.path.startsWith('/hären-i/') ? 'is-sub' : undefined}><a href={href(lang, p.path)}>{p.title}{p.kind && <small> · {KIND[p.kind][lang]}</small>}</a>{p.year && <span>{p.year}</span>}</li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          </details>
+        )}
         {hallMaps.map((h) => (
           <section class="hall-map">
             <h2>{h.name}</h2>

@@ -3,14 +3,12 @@ import Base from '../layouts/Base.astro';
 import site from '../data/site.json';
 import { t, href, type Lang } from '../i18n/ui';
 import { teams, partners, news } from '../lib/content';
-import { teamsGrid, youthLabel, partnerPatches, newsSlides } from '../lib/render';
+import { teamsGrid, trainingCards, partnerPatches, newsSlides } from '../lib/render';
 import { windowMatches, matchCards, tablesHtml, liveMatch, MAIN_TABLE_TEAMS, type Match, type Table } from '../lib/matches';
 import flh from '../data/flh.json';
-import { handballSvg } from '../lib/handball';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
-// Schnappschuss beim Bauen; im Browser wird sofort neu geladen (src/scripts/site.ts).
 // Schnappschuss aus `npm run sync`; im Browser wird die laufende Woche nachgeladen (src/scripts/site.ts).
 const matches = windowMatches(flh.matches as Match[]);
 const tables = (flh.tables as Table[]).filter((x) => MAIN_TABLE_TEAMS.includes(x.team));
@@ -20,57 +18,28 @@ const live = liveMatch(matches);
 const rtl = 'https://www.rtl.lu/sport/live-arena';
 ---
 <Base lang={lang} title="Start" path="/">
-  <div class="hero-wrap">
-    <section class="wrap back" aria-labelledby="hero-title">
-      <div class="back-print" aria-hidden="true">
-        <div class="nr-wrap">
-          {/* Name, Nummer und Gründungsjahr bilden eine Spalte: PÉITENG steht immer mittig über der 62 */}
-          <div class="nr-col">
-            <svg class="back-name" viewBox="0 0 720 170" role="presentation">
-              <path id="arc" d="M40 160 Q360 20 680 160" fill="none" />
-              <text text-anchor="middle"><textPath href="#arc" startOffset="50%" data-edit="ui:hero.back">{t(lang, 'hero.back')}</textPath></text>
-            </svg>
-            <div class="back-nr">62</div>
-            <p class="back-since" data-edit="ui:hero.since">{t(lang, 'hero.since')}</p>
-          </div>
-          {/* Tor neben der 62 mit Clublogo im Netz und dem Ball davor (ruhig, ohne Animation) */}
-          <div class="hero-goal">
-            <svg class="goal" viewBox="0 0 300 200" aria-hidden="true">
-              <g class="net">
-                <path class="net-back" d="M34 30 L266 30 L266 196 L34 196 Z" />
-                <path class="net-lines" d="M14 14 L34 30 M286 14 L266 30 M34 30 L34 196 M266 30 L266 196 M34 30 L266 30 M60 30 L60 196 M86 30 L86 196 M112 30 L112 196 M138 30 L138 196 M164 30 L164 196 M190 30 L190 196 M216 30 L216 196 M242 30 L242 196 M34 54 L266 54 M34 78 L266 78 M34 102 L266 102 M34 126 L266 126 M34 150 L266 150 M34 174 L266 174 M14 60 L34 66 M14 110 L34 112 M14 160 L34 158 M286 60 L266 66 M286 110 L266 112 M286 160 L266 158" />
-              </g>
-              <path class="post" d="M14 198 L14 14 L286 14 L286 198" />
-              <path class="post-stripes" d="M14 198 L14 14 L286 14 L286 198" />
-            </svg>
-            <img class="goal-logo" src="/brand/hbp-logo.jpg" alt="HB Péiteng" width="120" height="120" />
-            <span class="goal-floor"></span>
-            <span class="goal-shadow"></span>
-            <span class="goal-ball"><Fragment set:html={handballSvg('hb-goal')} /></span>
-          </div>
-        </div>
-      </div>
-      <div class="back-copy">
-        <h1 id="hero-title" data-edit="ui:hero.title">{t(lang, 'hero.title')}</h1>
-        <p class="lead" data-edit="ui:hero.lead">{t(lang, 'hero.lead')}</p>
-        <div class="training">
-          <h2 data-edit="ui:label.title">{t(lang, 'label.title')}</h2>
-          <ul data-render="youth-label" set:html={youthLabel(teams, lang)} />
-          <p class="training-where" data-edit="ui:label.care">{t(lang, 'label.care')}</p>
-          <div class="training-foot">
-            <a class="tag-btn" href={href(lang, '/club/gëff-handballspiller-inn/')} data-edit="ui:cta.training">{t(lang, 'cta.training')}</a>
-            <a class="text-link" href={href(lang, '/trainingszäiten/')} data-edit="ui:label.all">{t(lang, 'label.all')}</a>
-          </div>
-        </div>
-      </div>
-    </section>
-    <div class="sleeve" aria-label={t(lang, 'partner.main')}>
-      <span class="sleeve-title" data-edit="ui:partner.main">{t(lang, 'partner.main')}</span>
-      <div class="marquee">
-        <div class="marquee-track">
-          <ul data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
-          <ul aria-hidden="true" data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
-        </div>
+  {/* Erster Bildschirm: nur der Name, groß in der Mitte, darunter die Sprungmarken */}
+  <section class="intro on-ink" aria-labelledby="hero-title">
+    <div class="wrap intro-in">
+      <img class="intro-logo" src="/brand/hbp-logo.svg" alt="" width="160" height="160" />
+      <p class="intro-since" data-edit="ui:hero.since">{t(lang, 'hero.since')}</p>
+      <h1 id="hero-title" class="intro-title"><span>Handball</span> <em data-edit="ui:hero.back">{t(lang, 'hero.back')}</em></h1>
+      <ul class="intro-links">
+        <li><a href="#matcher">{t(lang, 'matches.title')}</a></li>
+        <li><a href="#klassement">{t(lang, 'table.title')}</a></li>
+        <li><a href="#trainingen">{t(lang, 'label.title')}</a></li>
+        <li><a href="#equippen">{t(lang, 'nav.teams')}</a></li>
+      </ul>
+    </div>
+    <a class="intro-down" href="#matcher" aria-label={t(lang, 'matches.title')}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5l6 6 6-6" /></svg></a>
+  </section>
+  {/* Übergang zu den Spielen: Hauptpartner laufen durch */}
+  <div class="sleeve" aria-label={t(lang, 'partner.main')}>
+    <span class="sleeve-title" data-edit="ui:partner.main">{t(lang, 'partner.main')}</span>
+    <div class="marquee">
+      <div class="marquee-track">
+        <ul data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
+        <ul aria-hidden="true" data-render="partners-main" set:html={partnerPatches(partners, 'main')} />
       </div>
     </div>
   </div>
@@ -104,6 +73,19 @@ const rtl = 'https://www.rtl.lu/sport/live-arena';
           <span class="live-dot" aria-hidden="true"></span>
           <span><b class="live-now">{live ? `${t(lang, 'live.now')}: ${live.home} – ${live.guest}` : ''}</b><span data-edit="ui:live.flh">{t(lang, 'live.flh')}</span></span>
         </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="trainingen" aria-labelledby="training-title">
+    <div class="wrap reveal">
+      <div class="section-head">
+        <h2 id="training-title" data-edit="ui:label.title">{t(lang, 'label.title')}</h2>
+        <a class="text-link" href={href(lang, '/trainingszäiten/')} data-edit="ui:label.all">{t(lang, 'label.all')}</a>
+      </div>
+      <ul class="tcards" data-render="trainings" set:html={trainingCards(teams, lang)} />
+      <div class="training-foot">
+        <a class="tag-btn" href={href(lang, '/club/gëff-handballspiller-inn/')} data-edit="ui:cta.training">{t(lang, 'cta.training')}</a>
       </div>
     </div>
   </section>

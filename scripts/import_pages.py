@@ -291,7 +291,7 @@ def parents(n):
 
 
 # Titel, die auf der alten Seite falsch gesetzt waren
-TITLE_FIX = {"/events/": "Events", "/media/press/": "Press", "/noriichten-1/": "Neiegkeeten",
+TITLE_FIX = {"/events/": "Events", "/aner-equippen/": "Equippen", "/media/press/": "Press", "/noriichten-1/": "Neiegkeeten",
              "/wisi-cup/20-wisi-cup-2019/fotoen/": "Réckbléck op den 20. Wisi-Cup 2019",
              "/wisi-cup/20-wisi-cup-2019/info-deutsch/": "Praktische Informationen 2019",
              "/wisi-cup/20-wisi-cup-2019/info-français/": "Informations pratiques 2019",

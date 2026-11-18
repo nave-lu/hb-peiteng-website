@@ -3,7 +3,7 @@ import teamsData from '../data/teams.json';
 import partnersData from '../data/partners.json';
 import newsData from '../data/news.json';
 import type { NewsItem, Partner, Team } from './render';
-import type { Key } from '../i18n/ui';
+import type { Key, Lang } from '../i18n/ui';
 
 export interface Page { path: string; title: string; section: string; html: string }
 
@@ -31,7 +31,7 @@ export const NAV: { key: Key; path: string; prefixes: string[] }[] = [
 ];
 
 /** Seiten, die im Menü nicht erscheinen (Inhalt fehlt oder ist kaputt), Adresse bleibt erreichbar. */
-const HIDDEN = new Set(['/noriichten-1/archiv/international/', '/club/medico/', '/noriichten-1/neu/']);
+const HIDDEN = new Set(['/noriichten-1/archiv/international/', '/club/medico/', '/noriichten-1/neu/', '/aner-equippen/']);
 
 export const sectionOf = (path: string) => NAV.find((n) => n.prefixes.some((p) => path.startsWith(p)));
 
@@ -39,12 +39,19 @@ export const sectionOf = (path: string) => NAV.find((n) => n.prefixes.some((p) =
 export function sectionTree(path: string) {
   const sec = sectionOf(path);
   if (!sec) return [];
-  // Reihenfolge der Bereiche wie in NAV (z. B. erst Hären I, dann aner Equippen), darin natürlich sortiert
+  // Reihenfolge der Bereiche wie in NAV (z. B. erst Hären I, dann die übrigen Equippen), darin natürlich sortiert
   return sec.prefixes
     .flatMap((pre) => pages.filter((p) => p.path.startsWith(pre)))
     .filter((p) => !HIDDEN.has(p.path))
     .filter((p) => !p.path.startsWith('/noriichten-1/') || p.path.split('/').filter(Boolean).length <= 2)
     .map((p) => ({ ...p, depth: p.path.split('/').filter(Boolean).length - 1 }));
+}
+
+/** Menü: pro Rubrik nur die Haupt- und direkten Unterseiten (Tiefe 0–1). */
+export function menuLinks(n: (typeof NAV)[number], lang: Lang) {
+  // Equippen: nur die Mannschaften selbst (Hären I führt auf seine Hauptseite, nicht auf die Trainingszeiten)
+  if (n.key === 'nav.teams') return teams.filter((x) => !x.hidden && x.page).map((x) => ({ path: x.page.replace(/trainingszäiten\/$/, ''), title: x.name[lang] || x.name.lb, depth: 0 }));
+  return sectionTree(n.path).filter((p) => p.depth <= 1);
 }
 
 const DATE = /(\d{1,2})\.(\d{1,2})\.(\d{2,4})/;
@@ -157,6 +164,26 @@ export function isArchive(p: Page): boolean {
   const ARCHIVE_SECTIONS = ['/wisi-cup/', '/media/', '/noriichten-1/', '/hären-i/resultater/coupe/', '/hären-i/resultater/statistik/'];
   const cat = /^\/noriichten-1\/[^/]+\/$/.test(p.path) || p.path === '/noriichten-1/';
   return ARCHIVE_SECTIONS.some((s) => p.path.startsWith(s)) && !posts.some((x) => x.path === p.path) && !cat && p.path !== '/wisi-cup/';
+}
+
+/** Archiv von Hären I (Knopf unten auf der Seite): alte Unterseiten, Coupe-Saison 2018 und alte Meldungen.
+ *  Nationalmannschaften und gemeinsame Hären/Dammen-Meldungen gehören nicht dazu. */
+export function haerenArchive() {
+  const year = (p: Page) => archiveYear(p) || archiveRange(p);
+  const newestFirst = (a: Page, b: Page) => year(b).slice(-4).localeCompare(year(a).slice(-4)) || a.title.localeCompare(b.title, 'de');
+  const outside = pages.filter((p) => !p.path.startsWith('/hären-i/') && !HIDDEN.has(p.path));
+  const cup = outside.filter((p) => /coupe|final/i.test(p.path));
+  const news = outside.filter((p) => !cup.includes(p) && /hären-1|hären-i\b|virstellung-hären|neien-hären|radek|merchweiler/i.test(decodeURIComponent(p.path)));
+  return [
+    { key: 'archive.team' as const, items: pages.filter((p) => p.path.startsWith('/hären-i/') && p.path !== '/hären-i/') },
+    { key: 'archive.cup' as const, items: cup.sort(newestFirst) },
+    { key: 'nav.news' as const, items: news.sort(newestFirst) },
+  ].map((g) => ({ ...g, items: g.items.map((p) => ({
+    path: p.path, title: p.title, depth: p.path.split('/').filter(Boolean).length,
+    // Mannschaftsseiten zeigen den ganzen Zeitraum, alles andere das Jahr
+    year: g.key === 'archive.team' ? archiveRange(p) : year(p),
+    kind: (p.path.match(/^\/media\/(fotoen|press|video)\//)?.[1] ?? '') as '' | 'fotoen' | 'press' | 'video',
+  })) }));
 }
 
 /** Unterseiten einer Seite (eine Ebene tiefer), für Übersichten ohne eigenen Inhalt. */

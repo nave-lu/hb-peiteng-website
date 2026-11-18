@@ -86,14 +86,14 @@ export function teamsGrid(teams: Team[], lang: Lang): string {
     .join('');
 }
 
-/** Trainingszeiten der Jugend als eingenähtes Etikett (Startseite). */
-export function youthLabel(teams: Team[], lang: Lang): string {
+/** Trainingszeiten aller Equippen (Startseite): pro Equipe Name und jede Einheit mit Tag + Uhrzeit. */
+export function trainingCards(teams: Team[], lang: Lang): string {
   return teams
-    .filter((t) => t.group === 'youth' && !t.hidden && t.training.length && Number(t.nr) <= 15)
+    .filter((t) => !t.hidden && t.training.length)
     .map((t) => {
-      const days = t.training.map((r) => tr(lang, 'day.' + r.day).slice(0, 2)).join(' · ');
-      const inner = `<span class="lbl-team">${e((t.name[lang] || t.name.lb).replace(/\s*\(.*/, ''))}</span><span class="lbl-days">${e(days)}</span><span class="lbl-time">${e(t.training[0].time)}</span>`;
-      return `<li>${t.page ? `<a href="${e(href(lang, t.page))}">${inner}<svg class="lbl-arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4l6 6-6 6"/></svg></a>` : inner}</li>`;
+      const name = e((t.name[lang] || t.name.lb).replace(/\s*\(.*/, ''));
+      const rows = t.training.map((r) => `<li><span>${e(tr(lang, 'day.' + r.day).slice(0, 2))}</span>${e(r.time)}</li>`).join('');
+      return `<li class="tcard"><h3>${t.page ? `<a href="${e(href(lang, t.page))}">${name}</a>` : name}</h3><ul>${rows}</ul></li>`;
     })
     .join('');
 }

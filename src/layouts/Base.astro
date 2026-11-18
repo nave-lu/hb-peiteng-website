@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import site from '../data/site.json';
 import { LANGS, LANG_NAME, HTML_LANG, t, href, type Lang } from '../i18n/ui';
-import { NAV, sectionOf } from '../lib/content';
+import { NAV, sectionOf, menuLinks } from '../lib/content';
 
 interface Props { lang: Lang; title: string; path: string; description?: string; editKey?: string }
 const { lang, title, path, description } = Astro.props;
@@ -19,44 +19,60 @@ const joinPath = '/club/gëff-handballspiller-inn/';
     <title>{fullTitle}</title>
     <meta name="description" content={desc} />
     <meta name="theme-color" content="#0e0e0c" />
-    <link rel="icon" href="/brand/hbp-logo.jpg" />
+    <link rel="icon" href="/brand/hbp-logo.svg" />
     <link rel="preload" href="/fonts/big-shoulders-display-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     {LANGS.map((l) => <link rel="alternate" hreflang={HTML_LANG[l]} href={href(l, path)} />)}
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={desc} />
     <meta property="og:image" content="/fotos/i19c747d3d81ebcd6.jpg" />
   </head>
-  <body data-lang={lang} data-path={path}>
+  <body data-lang={lang} data-path={path} class={path === '/' ? 'is-home' : undefined}>
     <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
       <defs>
         <pattern id="hbp-mesh" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="1.25" cy="1.25" r="0.85" fill="rgb(14 14 12 / 0.16)"/><circle cx="3.75" cy="3.75" r="0.85" fill="rgb(14 14 12 / 0.1)"/></pattern>
       </defs>
     </svg>
     <a class="skip" href="#inhalt">{t(lang, 'nav.skip')}</a>
-    <header class="collar">
-      <div class="wrap collar-in">
-        <a class="collar-logo" href={href(lang, '/')} aria-label={`${site.name} – Start`}>
-          <img src="/brand/hbp-logo.jpg" alt="" width="46" height="46" />
+    {/* Kopf ohne Leiste: Logo + Name links, rechts nur die drei Striche (bleiben beim Scrollen sichtbar) */}
+    <header class="topbar">
+      <div class="wrap topbar-in">
+        <a class="brand" href={href(lang, '/')} aria-label={`${site.name} – Start`}>
+          <img src="/brand/hbp-logo.svg" alt="" width="52" height="52" />
           <span>HB Péiteng</span>
         </a>
-        <nav class="collar-nav" aria-label="Haaptmenü">
-          {NAV.map((n) => <a href={href(lang, n.path)} aria-current={current?.key === n.key ? 'page' : undefined}>{t(lang, n.key)}</a>)}
-          <a href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined}>{t(lang, 'nav.contact')}</a>
-        </nav>
+      </div>
+    </header>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label={t(lang, 'nav.menu')} data-open-label={t(lang, 'nav.menu')} data-close-label={t(lang, 'nav.close')}>
+      <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+    {/* Menü über die ganze Seite: links die Rubriken, rechts (Handy: darunter) ihre Seiten */}
+    <div class="menu" id="menu">
+      <a class="brand" href={href(lang, '/')} tabindex="-1">
+        <img src="/brand/hbp-logo.svg" alt="" width="52" height="52" />
+        <span>HB Péiteng</span>
+      </a>
+      <nav class="menu-main" aria-label="Haaptmenü">
+        <ul>
+          {NAV.map((n) => (
+            <li class="menu-item" data-current={current?.key === n.key ? '' : undefined}>
+              {/* große Schrift führt direkt zur Rubrik; „+“ (nur Handy) klappt ihre Seiten auf */}
+              <div class="menu-row">
+                <a class="menu-sec" href={href(lang, n.path)} aria-current={current?.key === n.key ? 'true' : undefined}>{t(lang, n.key)}</a>
+                <button class="menu-toggle" type="button" aria-expanded="false" aria-label={t(lang, n.key)}><span aria-hidden="true"></span></button>
+              </div>
+              <ul class="menu-sub">
+                {menuLinks(n, lang).map((p) => <li class={p.depth ? 'is-sub' : undefined}><a href={href(lang, p.path)} aria-current={p.path === path ? 'page' : undefined}>{p.title}</a></li>)}
+              </ul>
+            </li>
+          ))}
+          <li class="menu-item"><a class="menu-sec" href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined}>{t(lang, 'nav.contact')}</a></li>
+        </ul>
+      </nav>
+      <div class="menu-foot">
+        <a class="tag-btn" href={href(lang, joinPath)}>{t(lang, 'cta.training')}</a>
         <div class="lang" aria-label="Sprooch">
           {LANGS.map((l) => <a href={href(l, path)} hreflang={HTML_LANG[l]} lang={HTML_LANG[l]} aria-current={l === lang ? 'true' : undefined}>{LANG_NAME[l]}</a>)}
         </div>
-        <a class="collar-cta" href={href(lang, joinPath)}>{t(lang, 'cta.training')}</a>
-        <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu">{t(lang, 'nav.menu')}</button>
-      </div>
-    </header>
-    <div class="menu" id="menu">
-      <ul>
-        {NAV.map((n) => <li><a href={href(lang, n.path)} aria-current={current?.key === n.key ? 'page' : undefined}>{t(lang, n.key)}</a></li>)}
-        <li><a href={href(lang, '/kontakt/')}>{t(lang, 'nav.contact')}</a></li>
-      </ul>
-      <div class="lang">
-        {LANGS.map((l) => <a href={href(l, path)} hreflang={HTML_LANG[l]} aria-current={l === lang ? 'true' : undefined}>{LANG_NAME[l]}</a>)}
       </div>
     </div>
 
@@ -69,7 +85,7 @@ const joinPath = '/club/gëff-handballspiller-inn/';
         <div class="shorts-grid">
           <div>
             <div class="shorts-brand">
-              <img src="/brand/hbp-logo.jpg" alt="" width="64" height="64" loading="lazy" />
+              <img src="/brand/hbp-logo.svg" alt="" width="64" height="64" loading="lazy" />
               <strong>{site.fullName.replace(' a.s.b.l.', '')}</strong>
             </div>
             <h2>{t(lang, 'footer.address')}</h2>
