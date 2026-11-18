@@ -71,11 +71,13 @@ export async function fetchSeason(pauseMs = 600): Promise<Match[]> {
   return dedupe(all);
 }
 
-/** Am selben Tag erst die Hären, dann die Dammen, dann die Jugend (jünger zuerst). */
-const TEAM_ORDER = ['Hären 1', 'Hären 2', 'Dammen', 'Dammen II'];
-const teamRank = (team: string) => {
+/** Am selben Tag nach Alter, älteste zuerst: Hären 1, Dammen, Hären 2, Dammen II, dann U21 … U9. */
+const TEAM_ORDER = ['Hären 1', 'Dammen', 'Hären 2', 'Dammen II'];
+export const teamRank = (team: string) => {
   const i = TEAM_ORDER.indexOf(team);
-  return i >= 0 ? i : 10 + (parseInt(team.replace(/\D/g, ''), 10) || 99);
+  if (i >= 0) return i;
+  const age = parseInt(team.replace(/\D/g, ''), 10);
+  return age ? 100 - age : 99; // U21 vor U15 vor … U9; Unbekanntes ans Ende
 };
 const dedupe = (list: Match[]) => {
   const seen = new Set<string>();
