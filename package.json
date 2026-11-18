@@ -11,7 +11,7 @@
     "preview": "astro preview",
     "test": "python3 -I tests/test_import.py && node --experimental-strip-types --no-warnings tests/live.check.ts && node tests/pages-base.check.mjs",
     "sync": "node --experimental-strip-types --no-warnings scripts/sync-flh.ts",
-    "deploy": "astro build && (test -f public/CNAME || node scripts/pages-base.mjs /hb-peiteng-website) && touch dist/.nojekyll && cd dist && rm -rf .git && git init -q -b gh-pages && git add -A && git commit -qm \"Mise en ligne\" && git push -qf \"$(git -C .. remote get-url origin)\" gh-pages"
+    "deploy": "astro build && node scripts/pages-base.mjs $(test -f public/CNAME || echo /hb-peiteng-website) && cd dist && rm -rf .git && git init -q -b gh-pages && git add -A && git commit -qm \"Mise en ligne\" && git push -qf \"$(git -C .. remote get-url origin)\" gh-pages"
   },
   "dependencies": {
     "astro": "^7.3.5"

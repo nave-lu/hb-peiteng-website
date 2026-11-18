@@ -1,9 +1,11 @@
-// GitHub Pages liegt unter /<repo>/ statt im Wurzelverzeichnis: nach dem Bauen alle
-// Wurzel-Pfade in dist/ (href="/…", src="/…", url(/…)) mit diesem Präfix versehen.
-// Aufruf: node scripts/pages-base.mjs /hb-peiteng-website
+// Letzter Schritt vor dem Hochladen (npm run deploy):
+// 1. iCloud-Doppel entfernen: Der Projektordner liegt auf dem synchronisierten Schreibtisch, iCloud legt in dist/
+//    Kopien wie „index 3.html“ an. Gelöscht wird „name N.ext“ nur, wenn „name.ext“ daneben existiert.
+// 2. Nur ohne eigene Domain (GitHub Pages unter /<repo>/): alle Wurzel-Pfade (href="/…", src="/…", url(/…))
+//    mit dem Präfix versehen. Aufruf: node scripts/pages-base.mjs [/hb-peiteng-website]
 // ponytail: Textersetzung statt Astro-`base`, weil Inhalte (importierte Seiten, Fotos) feste /-Pfade haben;
-// mit eigener Domain entfällt dieser Schritt ganz.
-import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+// mit eigener Domain entfällt Schritt 2 ganz.
+import { readdirSync, readFileSync, writeFileSync, statSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
@@ -13,16 +15,28 @@ export const rebase = (s, b) =>
     .replace(/(=\s*["'])\/(?!\/)/g, `$1${b}/`) // Attribute
     .replace(/url\((["']?)\/(?!\/)/g, `url($1${b}/`); // CSS und style="…url(/…)"
 
+/** „index 3.html“ → „index.html“, sonst null */
+export const icloudOriginal = (path) => {
+  const m = path.match(/^(.*) \d+(\.[^./]+)?$/);
+  return m ? m[1] + (m[2] ?? '') : null;
+};
+
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const base = (process.argv[2] || '').replace(/\/$/, '');
-  if (!base.startsWith('/')) throw new Error('Pfad fehlt, z. B. /hb-peiteng-website');
-  let n = 0;
+  let dupes = 0;
   for (const f of walk('dist')) {
-    if (!/\.(html|css)$/.test(f)) continue;
-    const s = readFileSync(f, 'utf8');
-    const out = rebase(s, base);
-    if (out !== s) { writeFileSync(f, out); n++; }
+    const orig = icloudOriginal(f);
+    if (orig && existsSync(orig)) { rmSync(f); dupes++; }
+  }
+  const base = (process.argv[2] || '').replace(/\/$/, '');
+  let n = 0;
+  if (base) {
+    for (const f of walk('dist')) {
+      if (!/\.(html|css)$/.test(f)) continue;
+      const s = readFileSync(f, 'utf8');
+      const out = rebase(s, base);
+      if (out !== s) { writeFileSync(f, out); n++; }
+    }
   }
   writeFileSync('dist/.nojekyll', ''); // sonst blendet GitHub Pages den Ordner _astro aus
-  console.log(`${n} Dateien auf ${base}/ umgestellt`);
+  console.log(`${dupes} iCloud-Doppel entfernt` + (base ? `, ${n} Dateien auf ${base}/ umgestellt` : ''));
 }
