@@ -3,7 +3,7 @@
 Neue Webseite des Handball Club vun der Gemeng Péiteng (Ersatz für die alte Jimdo-Seite hbpeiteng.com).
 Design „Das Trikot“: Gelb ist der Stoff, Schwarz sind Nummern, Nähte und Hose. Jede Equipe ist ein Trikot mit Nummer, Partner sind Patches.
 
-Offene Punkte stehen in [`OFFENE-PUNKTE.md`](OFFENE-PUNKTE.md), der Demo-Login in `Demo-Zugang.txt`.
+Offene Punkte stehen in [`OFFENE-PUNKTE.md`](OFFENE-PUNKTE.md). Der Demo-Login steht in `Demo-Zugang.txt` (nur lokal, nicht im Repository).
 
 ## Starten
 
