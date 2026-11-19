@@ -50,6 +50,8 @@ export interface EditState {
   site: Record<string, string>;
   /** eigene Spiele (zusätzlich zu den FLH-Spielen) */
   matches: OwnMatch[];
+  /** direkt im Spiele-Kasten geänderte Felder, je Spiel-ID (gilt auch für FLH-Spiele) */
+  matchEdits: Record<string, Record<string, string>>;
 }
 
 export interface OwnMatch {
@@ -57,7 +59,7 @@ export interface OwnMatch {
   hall: string; town: string; ours: string; theirs: string; competition: string; hidden?: boolean;
 }
 
-export const emptyState = (): EditState => ({ v: 1, texts: {}, html: {}, photos: {}, teams: null, partners: null, news: null, links: {}, site: {}, matches: [] });
+export const emptyState = (): EditState => ({ v: 1, texts: {}, html: {}, photos: {}, teams: null, partners: null, news: null, links: {}, site: {}, matches: [], matchEdits: {} });
 /** ältere gespeicherte Stände bekommen die neuen Felder dazu */
 export const normalize = (c: Partial<EditState> | null): EditState => ({ ...emptyState(), ...(c ?? {}) });
 

@@ -9,7 +9,7 @@ body.has-hbp-bar .thumb { display: none; }
   position: fixed; z-index: 90; left: 50%; bottom: max(12px, env(safe-area-inset-bottom)); translate: -50% 0;
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px;
   background: var(--ink); color: var(--white); border-radius: 8px; box-shadow: 0 16px 40px -12px rgb(0 0 0 / 0.65);
-  max-width: calc(100vw - 24px);
+  width: max-content; max-width: calc(100vw - 24px); /* sonst bricht die Leiste wegen left: 50% schon bei halber Breite um */
 }
 @media (max-width: 640px) {
   .hbp-bar { flex-wrap: nowrap; overflow-x: auto; left: 8px; right: 8px; translate: none; max-width: none; }

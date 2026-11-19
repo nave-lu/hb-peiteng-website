@@ -96,7 +96,7 @@ function openDetail(shirt: HTMLElement) {
   if (r.bottom > innerHeight) setTimeout(() => detail.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'nearest' }), 120);
 }
 document.addEventListener('click', (ev) => {
-  if (editing()) return;
+  // auch im Admin aufklappbar: dort bearbeitet man Name, Trainer und Zeiten direkt im aufgeklappten Trikot
   const el = ev.target as HTMLElement;
   const turn = el.closest('.shirt-turn');
   if (turn) openDetail(turn.closest('.shirt') as HTMLElement);
@@ -187,11 +187,15 @@ const freshTables = (m: Match[]) => cached('flh-tables-v2-' + [...new Set(m.map(
 
 /* Eigene Spiele aus dem Admin (Freundschaftsspiele, Turniere …): kommen per Ereignis „hbp:data“ dazu */
 let extraMatches: Match[] = [];
+let matchEdits: Record<string, Partial<Match>> = {};
 const dataListeners: (() => void)[] = [];
 addEventListener('hbp:data', (ev) => {
   extraMatches = ((ev as CustomEvent).detail?.matches ?? []) as Match[];
+  matchEdits = ((ev as CustomEvent).detail?.edits ?? {}) as Record<string, Partial<Match>>;
   dataListeners.forEach((f) => f());
 });
+/** im Admin direkt geänderte Felder über die Spiele legen */
+const withEdits = (list: Match[]) => list.map((m) => (matchEdits[m.id] ? { ...m, ...matchEdits[m.id] } : m));
 
 const box = document.querySelector<HTMLElement>('[data-matches]');
 const liveEl = document.querySelector<HTMLElement>('[data-live]');
@@ -209,7 +213,7 @@ if (box) {
   paintLive(base.matches);
   const refresh = () => freshWeeks()
     .then(async (fresh) => {
-      const m = windowMatches(mergeMatches(base.matches, [...fresh, ...extraMatches]));
+      const m = withEdits(windowMatches(mergeMatches(base.matches, [...fresh, ...extraMatches])));
       box.innerHTML = matchCards(m, lang);
       setupCarousel(box.closest<HTMLElement>('[data-carousel]')!);
       paintLive(m);
@@ -233,7 +237,7 @@ if (box) {
   // nur während eines laufenden Matches wird er übersprungen (dann wirklich alle 2 Minuten).
   // Die Wochen rechnen ab heute, rücken also jede Woche von selbst weiter.
   const tick = () => {
-    if (document.hidden) return;
+    if (document.hidden || editing()) return; // beim Bearbeiten nicht unter den Fingern neu zeichnen
     if (liveEl?.classList.contains('is-live')) try { sessionStorage.removeItem('flh-weeks-v3'); } catch { /* egal */ }
     refresh();
   };
@@ -249,7 +253,7 @@ if (teamLive) {
   const keep = teamLive.querySelector('[data-flh-base]')!;
   const draw = () => freshWeeks()
     .then(async (fresh) => {
-      const list = teamMatches(mergeMatches(base.matches, [...fresh, ...extraMatches]), team, mode as LiveMode);
+      const list = withEdits(teamMatches(mergeMatches(base.matches, [...fresh, ...extraMatches]), team, mode as LiveMode));
       const tables = mode === 'cup' ? [] : await freshTables(list).catch(() => base.tables);
       const html = teamLiveHtml(list, tables, mode as LiveMode, lang as Lang, { results: hResults, table: hTable });
       // nur ersetzen, wenn wirklich etwas Neues da ist (sonst bleibt Schnappschuss bzw. Link auf flh.lu)
@@ -345,7 +349,7 @@ function jumpTo(id: string): boolean {
 }
 document.addEventListener('click', (ev) => {
   const a = (ev.target as Element).closest?.<HTMLAnchorElement>('a[href^="#"]');
-  if (!a || a.hasAttribute('data-login') || a.hash.length < 2) return;
+  if (!a || a.hasAttribute('data-login') || a.hash.length < 2 || editing()) return; // im Admin nicht springen
   const id = decodeURIComponent(a.hash.slice(1));
   if (jumpTo(id)) { ev.preventDefault(); history.pushState(null, '', `#${id}`); }
 });

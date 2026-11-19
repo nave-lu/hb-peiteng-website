@@ -31,12 +31,18 @@ export const shirtSvg = (cls = 'shirt-shape') => `<svg class="${cls}" viewBox="0
   <path class="collar" d="M62 12 C80 26 120 26 138 12"/>
 </svg>`;
 
+/* data-bind="team:<id>:<feld>" usw.: Stellen, die der Admin direkt auf der Seite bearbeiten kann (gilt dann überall). */
+const bind = (key: string, text: string, tag = 'span', attrs = '') => `<${tag} data-bind="${e(key)}"${attrs}>${e(text)}</${tag}>`;
+const timeRows = (t: Team, lang: Lang) =>
+  t.training
+    .map((r, j) => `<li><span class="day">${e(tr(lang, 'day.' + r.day))}</span>${bind(`team:${t.id}:training.${j}.time`, r.time, 'span', ' class="time"')}${bind(`team:${t.id}:training.${j}.hall`, r.hall, 'span', ' class="hall"')}</li>`)
+    .join('');
+const metaLine = (t: Team) => [t.years ? bind(`team:${t.id}:years`, t.years) : '', t.league ? bind(`team:${t.id}:league`, t.league) : ''].filter(Boolean).join(' · ');
+
 export function teamShirt(t: Team, lang: Lang): string {
   const name = t.name[lang] || t.name.lb;
   const back = name.replace(/\s*\+.*$/, '').toUpperCase();
-  const rows = t.training
-    .map((r) => `<li><span class="day">${e(tr(lang, 'day.' + r.day))}</span><span class="time">${e(r.time)}</span><span class="hall">${e(r.hall)}</span></li>`)
-    .join('');
+  const rows = timeRows(t, lang);
   // Die Details stehen im Trikot (für Bildschirmleser und ohne JavaScript) und werden beim Antippen
   // als Bahn unter der Trikot-Reihe aufgeklappt.
   return `<article class="shirt" data-team="${e(t.id)}">
@@ -49,9 +55,9 @@ export function teamShirt(t: Team, lang: Lang): string {
     </span>
   </button>
   <div class="shirt-info" hidden>
-    <div class="info-head"><span class="info-nr" aria-hidden="true">${e(t.nr)}</span><div><h3>${e(name)}</h3>${t.years || t.league ? `<p class="info-meta">${e([t.years, t.league].filter(Boolean).join(' · '))}</p>` : ''}</div></div>
+    <div class="info-head">${bind(`team:${t.id}:nr`, t.nr, 'span', ' class="info-nr"')}<div>${bind(`team:${t.id}:name`, name, 'h3')}${t.years || t.league ? `<p class="info-meta">${metaLine(t)}</p>` : ''}</div></div>
     <div class="info-cols">
-      ${t.coach ? `<div><h4>${e(tr(lang, 'teams.coach'))}</h4><p>${e(t.coach)}</p></div>` : ''}
+      ${t.coach ? `<div><h4 data-edit="ui:teams.coach">${e(tr(lang, 'teams.coach'))}</h4>${bind(`team:${t.id}:coach`, t.coach, 'p')}</div>` : ''}
       ${rows ? `<div class="info-times"><h4>${e(tr(lang, 'label.title').split(' ')[0])}</h4><ul class="shirt-times">${rows}</ul></div>` : ''}
     </div>
     ${t.page ? `<a class="tag-btn is-small" href="${e(href(lang, t.page))}">${e(tr(lang, 'teams.page'))}</a>` : ''}
@@ -62,16 +68,15 @@ export function teamShirt(t: Team, lang: Lang): string {
 /** Block „Trainer + Trainingszeiten“ oben auf den Mannschaftsseiten (und kompakt auf den Übersichten). */
 export function teamPanel(t: Team, lang: Lang, compact = false): string {
   const name = t.name[lang] || t.name.lb;
-  const rows = t.training
-    .map((r) => `<li><span class="day">${e(tr(lang, 'day.' + r.day))}</span><span class="time">${e(r.time)}</span><span class="hall">${e(r.hall)}</span></li>`)
-    .join('');
-  const title = compact && t.page ? `<a href="${e(href(lang, t.page))}">${e(name)}</a>` : e(name);
+  const rows = timeRows(t, lang);
+  const nameEl = bind(`team:${t.id}:name`, name);
+  const title = compact && t.page ? `<a href="${e(href(lang, t.page))}">${nameEl}</a>` : nameEl;
   return `<div class="team-panel${compact ? ' is-compact' : ''}" data-render="team-panel" data-team-id="${e(t.id)}">
-  <div class="mini-shirt" aria-hidden="true">${shirtSvg('mini-svg')}<span>${e(t.nr)}</span></div>
+  <div class="mini-shirt" aria-hidden="true">${shirtSvg('mini-svg')}${bind(`team:${t.id}:nr`, t.nr)}</div>
   <div>
     <h2>${title}</h2>
-    ${t.years || t.league ? `<p class="team-meta">${e([t.years, t.league].filter(Boolean).join(' · '))}</p>` : ''}
-    ${t.coach ? `<p class="team-coach"><strong>${e(tr(lang, 'teams.coach'))}:</strong> ${e(t.coach)}</p>` : ''}
+    ${t.years || t.league ? `<p class="team-meta">${metaLine(t)}</p>` : ''}
+    ${t.coach ? `<p class="team-coach"><strong>${e(tr(lang, 'teams.coach'))}:</strong> ${bind(`team:${t.id}:coach`, t.coach)}</p>` : ''}
     ${rows ? `<h3 class="team-times-title">${e(tr(lang, 'label.title').split(' ')[0])}</h3><ul class="shirt-times">${rows}</ul>` : ''}
   </div>
 </div>`;
@@ -80,11 +85,11 @@ export function teamPanel(t: Team, lang: Lang, compact = false): string {
 /** Übersicht zum Auswählen (Seite „Equippen“): pro Mannschaft eine Karte mit Trikot, Name und Liga, ganz anklickbar. */
 export function teamCards(teams: Team[], lang: Lang): string {
   const vis = teams.filter((t) => !t.hidden && t.page);
-  const card = (t: Team) => `<li><a href="${e(href(lang, t.page))}"><span class="mini-shirt" aria-hidden="true">${shirtSvg('mini-svg')}<span>${e(t.nr)}</span></span><span class="tc-name">${e(t.name[lang] || t.name.lb)}</span>${t.league || t.years ? `<span class="tc-meta">${e((t.league || t.years).split(' · ')[0])}</span>` : ''}</a></li>`;
+  const card = (t: Team) => `<li><a href="${e(href(lang, t.page))}"><span class="mini-shirt" aria-hidden="true">${shirtSvg('mini-svg')}<span>${e(t.nr)}</span></span>${bind(`team:${t.id}:name`, t.name[lang] || t.name.lb, 'span', ' class="tc-name"')}${t.league ? bind(`team:${t.id}:league`, t.league, 'span', ' class="tc-meta"') : t.years ? bind(`team:${t.id}:years`, t.years, 'span', ' class="tc-meta"') : ''}</a></li>`;
   return (['seniors', 'youth'] as const)
     .filter((g) => vis.some((t) => t.group === g))
     // Jugend von der ältesten zur jüngsten Mannschaft (U21 … U9)
-    .map((g) => `<h2 class="tc-group">${e(tr(lang, 'teams.' + g))}</h2><ul class="team-cards">${vis.filter((t) => t.group === g).sort((a, b) => (g === 'youth' ? Number(b.nr) - Number(a.nr) : 0)).map(card).join('')}</ul>`)
+    .map((g) => `<h2 class="tc-group" data-edit="ui:teams.${g}">${e(tr(lang, 'teams.' + g))}</h2><ul class="team-cards">${vis.filter((t) => t.group === g).sort((a, b) => (g === 'youth' ? Number(b.nr) - Number(a.nr) : 0)).map(card).join('')}</ul>`)
     .join('');
 }
 
@@ -93,7 +98,7 @@ export function teamsGrid(teams: Team[], lang: Lang): string {
   const group = (g: Team['group']) => vis.filter((t) => t.group === g);
   return (['seniors', 'youth'] as const)
     .filter((g) => group(g).length)
-    .map((g) => `<div class="shirt-rack"><h3 class="rack-title">${e(tr(lang, 'teams.' + g))}</h3><div class="rack">${group(g).map((t) => teamShirt(t, lang)).join('')}</div></div>`)
+    .map((g) => `<div class="shirt-rack"><h3 class="rack-title" data-edit="ui:teams.${g}">${e(tr(lang, 'teams.' + g))}</h3><div class="rack">${group(g).map((t) => teamShirt(t, lang)).join('')}</div></div>`)
     .join('');
 }
 
@@ -102,8 +107,8 @@ export function trainingCards(teams: Team[], lang: Lang): string {
   return teams
     .filter((t) => !t.hidden && t.training.length)
     .map((t) => {
-      const name = e((t.name[lang] || t.name.lb).replace(/\s*\(.*/, ''));
-      const rows = t.training.map((r) => `<li><span>${e(tr(lang, 'day.' + r.day).slice(0, 2))}</span>${e(r.time)}</li>`).join('');
+      const name = bind(`team:${t.id}:name`, t.name[lang] || t.name.lb);
+      const rows = t.training.map((r, j) => `<li><span>${e(tr(lang, 'day.' + r.day).slice(0, 2))}</span>${bind(`team:${t.id}:training.${j}.time`, r.time)}</li>`).join('');
       return `<li class="tcard"><h3>${t.page ? `<a href="${e(href(lang, t.page))}">${name}</a>` : name}</h3><ul>${rows}</ul></li>`;
     })
     .join('');
@@ -133,7 +138,7 @@ const newsLink = (n: NewsItem, lang: Lang) => (n.path ? href(lang, n.path) : `${
 export function newsPatch(n: NewsItem, lang: Lang): string {
   return `<article class="news-card" data-news="${e(n.id)}">
   <div class="news-img">${n.image ? `<img src="${e(n.image)}" alt="" loading="lazy">` : '<span class="news-noimg" aria-hidden="true">HBP</span>'}</div>
-  <h3><a href="${e(newsLink(n, lang))}">${e(n.title)}</a></h3>
+  <h3><a href="${e(newsLink(n, lang))}">${bind(`news:${n.id}:title`, n.title)}</a></h3>
   ${n.date ? `<time datetime="${e(n.date)}">${e(fmtDate(n.date, lang))}</time>` : n.year ? `<time>${e(n.year)}</time>` : ''}
 </article>`;
 }
@@ -152,9 +157,9 @@ export function newsSlides(items: NewsItem[], lang: Lang, limit = 6): string {
   <div class="slide-img" style="--bg:url('${e(n.image)}')"><img src="${e(n.image)}" alt="" decoding="async"></div>
   <div class="slide-body">
     ${n.date ? `<time datetime="${e(n.date)}">${e(fmtDate(n.date, lang))}</time>` : ''}
-    <h3>${e(n.title)}</h3>
-    ${n.excerpt ? `<p>${e(n.excerpt)}</p>` : ''}
-    <a class="tag-btn is-yellow" href="${e(newsLink(n, lang))}">${e(more)}<span class="sr">: ${e(n.title)}</span></a>
+    ${bind(`news:${n.id}:title`, n.title, 'h3')}
+    ${n.excerpt ? bind(`news:${n.id}:excerpt`, n.excerpt, 'p') : ''}
+    <a class="tag-btn is-yellow" href="${e(newsLink(n, lang))}"><span data-edit="ui:news.more">${e(more)}</span><span class="sr">: ${e(n.title)}</span></a>
   </div>
 </article>`)
     .join('');

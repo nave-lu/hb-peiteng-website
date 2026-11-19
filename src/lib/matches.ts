@@ -169,13 +169,13 @@ export function matchCards(matches: Match[], lang: Lang): string {
       const won = played && (m.isHome ? +m.homeGoals > +m.guestGoals : +m.guestGoals > +m.homeGoals);
       return `<article class="match${played ? ' is-played' : ''}${past && !played ? ' is-past' : ''}${won ? ' is-won' : ''}">
   <header><span class="match-team">${e(m.team)}</span><span class="match-where">${m.isHome ? L[lang].home : L[lang].away}</span></header>
-  <p class="match-date"><span class="d">${e(d.toLocaleDateString(LOCALE[lang], { weekday: 'short', day: 'numeric', month: 'short' }))}</span><span class="t">${e(m.time)}</span></p>
+  <p class="match-date"><span class="d">${e(d.toLocaleDateString(LOCALE[lang], { weekday: 'short', day: 'numeric', month: 'short' }))}</span><span class="t" data-bind="match:${e(m.id)}:time">${e(m.time)}</span></p>
   <div class="match-teams">
-    <span class="${ours(m.home).trim()}">${e(m.home)}</span>${played ? `<b>${e(m.homeGoals)}</b>` : ''}
-    <span class="${ours(m.guest).trim()}">${e(m.guest)}</span>${played ? `<b>${e(m.guestGoals)}</b>` : ''}
+    <span class="${ours(m.home).trim()}" data-bind="match:${e(m.id)}:home">${e(m.home)}</span>${played ? `<b data-bind="match:${e(m.id)}:homeGoals">${e(m.homeGoals)}</b>` : ''}
+    <span class="${ours(m.guest).trim()}" data-bind="match:${e(m.id)}:guest">${e(m.guest)}</span>${played ? `<b data-bind="match:${e(m.id)}:guestGoals">${e(m.guestGoals)}</b>` : ''}
   </div>
-  <p class="match-hall">${e(m.hall)}${m.town ? `, ${e(m.town)}` : ''}</p>
-  <p class="match-comp">${e(m.competition)}</p>
+  <p class="match-hall"><span data-bind="match:${e(m.id)}:hall">${e(m.hall)}</span>${m.town ? `, <span data-bind="match:${e(m.id)}:town">${e(m.town)}</span>` : ''}</p>
+  <p class="match-comp" data-bind="match:${e(m.id)}:competition">${e(m.competition)}</p>
 </article>`;
     })
     .join('');

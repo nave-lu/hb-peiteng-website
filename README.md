@@ -47,6 +47,8 @@ Die Daten kommen von Handball4all, derselben Quelle wie flh.lu.
 - **Beaarbechten:** Texte antippen und tippen. Ganze Seiteninhalte haben eine kleine Leiste (Fett, Kursiv, Überschrift, Liste, Link, Foto).
 - **Fotos:** im Bearbeiten-Modus antippen → anderes Foto, verstecken, Original. Fotos werden im Browser auf 2000 px verkleinert.
 - **Links:** im Bearbeiten-Modus einen Link antippen → neue Adresse, Original oder öffnen (gilt für alle Links mit derselben Adresse).
+- **Direkt auf der Seite tippen:** Mannschaftsnamen, Trikotnummer, Trainer, Trainingszeiten und Hallen (Trainingskarten, aufgeklapptes Trikot, Mannschaftsseiten), Titel und Kurztext der Neuigkeiten, Felder in den Spiele-Kästen (Uhrzeit, Mannschaften, Tore, Halle, Ort, Art), Menü, Fußzeile und alle festen Überschriften/Knöpfe. Gleiche Inhalte ändern sich überall gleichzeitig.
+- **Link-Text:** erster Klick öffnet das Link-Menü („Text ändern“ zuerst), ein zweiter Klick auf denselben Link setzt direkt in den Text.
 - **Verwalten:**
   - *Equippen:* Namen LB/FR/DE, Trikotnummer, Jahrgänge, Gruppe, Trainer, Liga-Text, Trainingszeiten mit Halle, FLH-Name, FLH-Liga-Nummer (Klassement, jede Saison neu), Seitenadresse, Reihenfolge, verstecken, neu, löschen.
   - *Matcher:* eigene Spiele zusätzlich zu den FLH-Spielen (Equipe, Datum, Uhrzeit, Heim/Auswärts, Gegner, Art, Halle, Ort, Resultat).

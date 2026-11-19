@@ -59,7 +59,7 @@ const joinPath = '/club/gëff-handballspiller-inn/';
             <li class="menu-item" data-current={current?.key === n.key ? '' : undefined}>
               {/* große Schrift führt direkt zur Rubrik; „+“ (nur Handy) klappt ihre Seiten auf */}
               <div class="menu-row">
-                <a class="menu-sec" href={href(lang, n.path)} aria-current={current?.key === n.key ? 'true' : undefined}>{t(lang, n.key)}</a>
+                <a class="menu-sec" href={href(lang, n.path)} aria-current={current?.key === n.key ? 'true' : undefined} data-edit={`ui:${n.key}`}>{t(lang, n.key)}</a>
                 <button class="menu-toggle" type="button" aria-expanded="false" aria-label={t(lang, n.key)}><span aria-hidden="true"></span></button>
               </div>
               <ul class="menu-sub">
@@ -70,7 +70,7 @@ const joinPath = '/club/gëff-handballspiller-inn/';
           {/* Kontakt wie die anderen Rubriken: rechts (Handy: aufklappen) Kontaktseite, E-Mails, Hallen, Partner werden */}
           <li class="menu-item" data-current={path === '/kontakt/' ? '' : undefined}>
             <div class="menu-row">
-              <a class="menu-sec" href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined}>{t(lang, 'nav.contact')}</a>
+              <a class="menu-sec" href={href(lang, '/kontakt/')} aria-current={path === '/kontakt/' ? 'page' : undefined} data-edit="ui:nav.contact">{t(lang, 'nav.contact')}</a>
               <button class="menu-toggle" type="button" aria-expanded="false" aria-label={t(lang, 'nav.contact')}><span aria-hidden="true"></span></button>
             </div>
             <ul class="menu-sub">
@@ -84,7 +84,7 @@ const joinPath = '/club/gëff-handballspiller-inn/';
         </ul>
       </nav>
       <div class="menu-foot">
-        <a class="tag-btn" href={href(lang, joinPath)}>{t(lang, 'cta.training')}</a>
+        <a class="tag-btn" href={href(lang, joinPath)} data-edit="ui:cta.training">{t(lang, 'cta.training')}</a>
         <div class="lang" aria-label="Sprooch">
           {LANGS.map((l) => <a href={href(l, path)} hreflang={HTML_LANG[l]} lang={HTML_LANG[l]} aria-current={l === lang ? 'true' : undefined} data-keep-menu>{LANG_NAME[l]}</a>)}
         </div>
@@ -115,11 +115,11 @@ const joinPath = '/club/gëff-handballspiller-inn/';
               <img src="/brand/hbp-logo.svg" alt="" width="64" height="64" loading="lazy" />
               <strong>{site.fullName.replace(' a.s.b.l.', '')}</strong>
             </div>
-            <h2>{t(lang, 'footer.address')}</h2>
+            <h2 data-edit="ui:footer.address">{t(lang, 'footer.address')}</h2>
             <p>{site.fullName}<br />{site.address.map((l) => <>{l}<br /></>)}</p>
           </div>
           <div>
-            <h2>{t(lang, 'nav.contact')}</h2>
+            <h2 data-edit="ui:nav.contact">{t(lang, 'nav.contact')}</h2>
             <ul>
               <li><a href={`mailto:${site.emails.club}`}>{site.emails.club}</a></li>
               <li><a href={`mailto:${site.emails.president}`}>{site.emails.president}</a></li>
@@ -127,17 +127,17 @@ const joinPath = '/club/gëff-handballspiller-inn/';
             </ul>
           </div>
           <div>
-            <h2>{t(lang, 'footer.halls')}</h2>
+            <h2 data-edit="ui:footer.halls">{t(lang, 'footer.halls')}</h2>
             <ul>
               {site.halls.map((h) => <li>{h.page ? <a href={href(lang, h.page)}>{h.name}</a> : h.name}<br /><span>{[h.street, h.city].filter(Boolean).join(', ')}</span></li>)}
             </ul>
           </div>
           <div>
-            <h2>{t(lang, 'footer.follow')}</h2>
+            <h2 data-edit="ui:footer.follow">{t(lang, 'footer.follow')}</h2>
             <ul>
-              <li><a href={site.links.flhKlassement} target="_blank" rel="noopener">{t(lang, 'weekend.table')}</a></li>
-              <li><a href={site.links.livestream} target="_blank" rel="noopener">{t(lang, 'weekend.live')}</a></li>
-              <li><a href={href(lang, '/partner/')}>{t(lang, 'partner.all')}</a></li>
+              <li><a href={site.links.flhKlassement} target="_blank" rel="noopener" data-edit="ui:weekend.table">{t(lang, 'weekend.table')}</a></li>
+              <li><a href={site.links.livestream} target="_blank" rel="noopener" data-edit="ui:weekend.live">{t(lang, 'weekend.live')}</a></li>
+              <li><a href={href(lang, '/partner/')} data-edit="ui:partner.all">{t(lang, 'partner.all')}</a></li>
               <li><a href={href(lang, '/shop/')}>Shop</a></li>
             </ul>
           </div>
@@ -148,8 +148,8 @@ const joinPath = '/club/gëff-handballspiller-inn/';
           <div class="shorts-base">
             <span>© {new Date().getFullYear()} {site.fullName}</span>
             <nav aria-label="Rechtliches">
-              <a href={href(lang, '/impressum/')}>{t(lang, 'footer.legal')}</a>
-              <a href={href(lang, '/dateschutz/')}>{t(lang, 'footer.privacy')}</a>
+              <a href={href(lang, '/impressum/')} data-edit="ui:footer.legal">{t(lang, 'footer.legal')}</a>
+              <a href={href(lang, '/dateschutz/')} data-edit="ui:footer.privacy">{t(lang, 'footer.privacy')}</a>
               <a href="#login" data-login>{t(lang, 'footer.login')}</a>
             </nav>
             <a class="made-by" href="https://nave.lu" target="_blank" rel="noopener">Created by <img src="/brand/nave-n.png" alt="" width="15" height="18" loading="lazy" /><img class="made-by-word" src="/brand/nave-wordmark.png" alt="Nave" width="43" height="14" loading="lazy" /></a>

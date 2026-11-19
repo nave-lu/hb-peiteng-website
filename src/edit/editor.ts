@@ -74,6 +74,8 @@ const toMatch = (o: OwnMatch): Match => ({
   hall: o.hall, town: o.town, isHome: o.isHome, classId: '', cls: '', live: false,
 });
 const ownMatches = () => state.matches.filter((m) => !m.hidden && m.date && m.team).map(toMatch);
+/** eigene Spiele und direkt geänderte Spiele-Felder an die Spiele-Anzeige (site.ts) melden */
+const sendData = () => dispatchEvent(new CustomEvent('hbp:data', { detail: { matches: ownMatches(), edits: state.matchEdits } }));
 
 /* Club-Daten (site.json): welche Felder es gibt; geänderte Werte werden in Fußzeile, Menü, Kontakt, Impressum und Hallen ersetzt */
 const getPath = (o: unknown, path: string): unknown => path.split('.').reduce<unknown>((v, k) => (v as Record<string, unknown> | undefined)?.[k], o);
@@ -135,23 +137,30 @@ function render() {
   const tablesEl = $('[data-tables]');
   if (tablesEl) tablesEl.dataset.classes = JSON.stringify(t.filter((x) => x.flhClass && MAIN_TABLE_TEAMS.includes(x.flh ?? '')).map((x) => ({ team: x.flh, classId: x.flhClass })));
   clearTimeout(dataTimer);
-  dataTimer = window.setTimeout(() => dispatchEvent(new CustomEvent('hbp:data', { detail: { matches: ownMatches() } })), 400);
+  dataTimer = window.setTimeout(sendData, 400);
   // Fotos in den Bausteinen (idb: → Blob-Adresse)
   for (const img of $$<HTMLImageElement>('[data-render] img')) {
     const s = img.getAttribute('src') || '';
     if (s.startsWith('idb:')) img.src = storage.imageUrl(s);
   }
+  applyTexts();
   if (editing) markEditable();
 }
 
-function apply() {
-  remember();
+/** feste Texte (data-edit) anwenden; auch in neu gezeichneten Bausteinen */
+function applyTexts() {
+  for (const el of $$('[data-edit]')) el.dataset.orig ??= el.textContent ?? '';
   const texts = state.texts[lang] ?? {};
   for (const el of $$('[data-edit]')) {
     const v = texts[el.dataset.edit!];
     const next = v ?? el.dataset.orig ?? '';
     if (el.textContent !== next && document.activeElement !== el) el.textContent = next;
   }
+}
+
+function apply() {
+  remember();
+  applyTexts();
   const html = state.html[lang] ?? {};
   for (const el of $$('[data-edit-html]')) {
     if (document.activeElement === el) continue;
@@ -217,8 +226,42 @@ function setHtml(key: string, value: string, orig: string) {
 
 /* ---------------- Bearbeiten auf der Seite ---------------- */
 function markEditable() {
-  for (const el of $$('[data-edit]')) { el.setAttribute('contenteditable', 'plaintext-only'); el.spellcheck = true; }
+  for (const el of $$('[data-edit], [data-bind]')) { if (!el.closest('button')) { el.setAttribute('contenteditable', 'plaintext-only'); el.spellcheck = true; } }
   for (const el of $$('[data-edit-html]')) el.setAttribute('contenteditable', 'true');
+}
+// neu eingefügte Stellen (aufgeklapptes Trikot, neu geladene Spiele) sofort bearbeitbar machen
+let markQueued = false;
+new MutationObserver(() => {
+  if (!editing || markQueued) return;
+  markQueued = true;
+  requestAnimationFrame(() => { markQueued = false; markEditable(); });
+}).observe(document.body, { childList: true, subtree: true });
+
+/* Gebundene Stellen (data-bind="team:<id>:<feld>", "news:…", "match:…"): Wert in die Daten schreiben
+ * und alle anderen Stellen mit derselben Bindung sofort mitändern. */
+function setBind(key: string, value: string, from: HTMLElement) {
+  const [kind, id, field] = key.split(':');
+  beforeChange();
+  if (kind === 'team') {
+    const t = editList<Team>('teams').find((x) => x.id === id);
+    if (!t) return;
+    if (field === 'name') t.name[lang] = value;
+    else if (field.startsWith('training.')) {
+      const [, j, f] = field.split('.');
+      if (t.training[+j]) (t.training[+j] as unknown as Record<string, string>)[f] = value;
+    } else (t as unknown as Record<string, unknown>)[field] = value;
+  } else if (kind === 'news') {
+    const n = editList<NewsItem>('news').find((x) => x.id === id);
+    if (n) (n as unknown as Record<string, unknown>)[field] = value;
+  } else if (kind === 'match') {
+    (state.matchEdits[id] ??= {})[field] = value;
+  }
+  changed(false);
+  for (const o of $$(`[data-bind="${CSS.escape(key)}"]`)) if (o !== from && o.textContent !== value) o.textContent = value;
+}
+// gleiche feste Texte an anderen Stellen sofort mitändern
+function syncText(key: string, value: string, from: HTMLElement) {
+  for (const o of $$(`[data-edit="${CSS.escape(key)}"]`)) if (o !== from && o.textContent !== value) o.textContent = value;
 }
 function setEditing(on: boolean) {
   editing = on;
@@ -231,14 +274,20 @@ function setEditing(on: boolean) {
 document.addEventListener('input', (ev) => {
   if (!editing) return;
   const el = ev.target as HTMLElement;
+  const b = el.closest<HTMLElement>('[data-bind]');
+  if (b) return setBind(b.dataset.bind!, b.textContent ?? '', b);
   const t = el.closest<HTMLElement>('[data-edit]');
-  if (t) return setText(t.dataset.edit!, t.textContent ?? '', t.dataset.orig ?? '');
+  if (t) { syncText(t.dataset.edit!, t.textContent ?? '', t); return setText(t.dataset.edit!, t.textContent ?? '', t.dataset.orig ?? ''); }
   const h = el.closest<HTMLElement>('[data-edit-html]');
   if (h) setHtml(h.dataset.editHtml!, readHtml(h), h.dataset.orig ?? '');
 });
 // Enter in einzeiligen Texten beendet die Eingabe
 document.addEventListener('keydown', (ev) => {
-  if (editing && ev.key === 'Enter' && (ev.target as HTMLElement).closest('[data-edit]')) { ev.preventDefault(); (ev.target as HTMLElement).blur(); }
+  if (editing && ev.key === 'Enter' && (ev.target as HTMLElement).closest('[data-edit], [data-bind]')) { ev.preventDefault(); (ev.target as HTMLElement).blur(); }
+});
+// Spiel-Feld fertig bearbeitet: Spiele-Anzeige neu zeichnen lassen
+document.addEventListener('focusout', (ev) => {
+  if (editing && (ev.target as HTMLElement).closest?.('[data-bind^="match:"]')) sendData();
 });
 // Beim Bearbeiten öffnen Links und Fotos nichts
 document.addEventListener('click', (ev) => {
@@ -252,12 +301,17 @@ document.addEventListener('click', (ev) => {
     return pickPhoto(img);
   }
   const link = el.closest<HTMLAnchorElement>('a[data-orig-href]');
-  if (link && link.closest('main, .shorts') && !link.closest('[contenteditable], [data-render]')) {
+  if (link && link.closest('main, .shorts, .menu') && !link.closest('[data-edit-html], [data-render]')) {
     ev.preventDefault();
+    const textEl = el.closest<HTMLElement>('[contenteditable]');
+    const editableText = textEl && (link.contains(textEl) || textEl === link) ? textEl : null;
+    // zweiter Klick auf denselben Link: im Text bleiben und tippen
+    if (editableText && lastLink === link) return;
     ev.stopPropagation();
-    return pickLink(link);
+    lastLink = link;
+    return pickLink(link, editableText);
   }
-  if (el.closest('main a') && (el.closest('[contenteditable]') || el.closest('[data-render]'))) ev.preventDefault();
+  if (el.closest('a') && (el.closest('[contenteditable]') || el.closest('[data-render]'))) ev.preventDefault();
 }, true);
 
 /* Foto wählen, verkleinern, ablegen */
@@ -324,9 +378,20 @@ async function pickPhoto(img: HTMLImageElement) {
 }
 
 /* Link ändern: neue Adresse für diesen Link (gilt für alle Links mit derselben Original-Adresse) */
-async function pickLink(a: HTMLAnchorElement) {
+let lastLink: HTMLAnchorElement | null = null;
+document.addEventListener('pointerdown', (ev) => { if (lastLink && !lastLink.contains(ev.target as Node) && !(ev.target as HTMLElement).closest('.hbp-menu')) lastLink = null; }, true);
+async function pickLink(a: HTMLAnchorElement, textEl: HTMLElement | null = null) {
   const orig = a.dataset.origHref!;
-  const action = await menu(a, [['edit', A('link.edit')], ['orig', A('link.orig')], ['open', A('link.open')]]);
+  const action = await menu(a, [...(textEl ? [['text', A('link.text')] as [string, string]] : []), ['edit', A('link.edit')], ['orig', A('link.orig')], ['open', A('link.open')]]);
+  if (action === 'text' && textEl) {
+    textEl.focus();
+    const r = document.createRange();
+    r.selectNodeContents(textEl);
+    const sel = getSelection()!;
+    sel.removeAllRanges();
+    sel.addRange(r);
+    return;
+  }
   if (action === 'open') return void window.open(a.href, '_blank', 'noopener');
   if (action === 'edit') {
     const v = prompt(A('link.prompt'), a.getAttribute('href') ?? '');
